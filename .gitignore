@@ -10,3 +10,4 @@ dist-ssr
 coverage
 renders/*.wav
 renders/*.mp3
+*.zip
