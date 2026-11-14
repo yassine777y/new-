@@ -8,6 +8,7 @@ import { emit } from '@/lib/bus'
 import { fmtSigned } from '@/lib/format'
 import { sampleSeries } from '@/lib/math'
 import { Badge, Button, IconButton, Toggle } from '@/components/ui/Primitives'
+import { Logo } from './Logo'
 import { IconAccess, IconClose, IconMic, IconMute, IconPause, IconPlay, IconVolume, TrackIcon } from '@/components/ui/Icon'
 
 const NAV = [
@@ -88,13 +89,11 @@ export function TopBar() {
     >
       <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-10">
         <button onClick={() => go('hero')} className="group flex shrink-0 items-center gap-2.5" aria-label="Earth Jukebox — back to top">
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full border border-sonic-300/40 bg-sonic-300/10">
-            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 text-sonic-300" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M3 12c3-3.4 6 3.4 9 0s6 3.4 9 0" />
-              <path d="M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18" opacity=".55" />
-            </svg>
-            {isPlaying && <span className="absolute inset-0 animate-pulse-ring rounded-full bg-sonic-300/25" aria-hidden />}
+          <span className="relative flex h-9 w-9 items-center justify-center">
+            <Logo size={36} />
+            {isPlaying && (
+              <span className="pointer-events-none absolute -inset-0.5 animate-pulse-ring rounded-full bg-sonic-300/20" aria-hidden />
+            )}
           </span>
           <span className="hidden text-left sm:block">
             <span className="block text-[13.5px] leading-tight font-semibold text-mist-50">Earth Jukebox</span>

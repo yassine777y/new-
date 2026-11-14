@@ -4,6 +4,7 @@ import { useStore } from '@/state/store'
 import { Badge, Button, Panel, Reveal, SectionHeading, SourceBadge } from '@/components/ui/Primitives'
 import { IconArrow, IconSpark, IconWave } from '@/components/ui/Icon'
 import { emit } from '@/lib/bus'
+import { Logo } from './Logo'
 
 const STACK = [
   ['Interface', 'React 19 + TypeScript, Tailwind CSS v4, Vite'],
@@ -122,11 +123,8 @@ export function Footer() {
       <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] lg:px-10">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-sonic-300/40 bg-sonic-300/10">
-              <svg viewBox="0 0 24 24" className="h-5 w-5 text-sonic-300" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M3 12c3-3.4 6 3.4 9 0s6 3.4 9 0" />
-              </svg>
+            <span className="flex h-9 w-9 items-center justify-center">
+              <Logo size={36} still />
             </span>
             <div>
               <div className="text-[15px] font-semibold text-mist-50">Earth Jukebox</div>
