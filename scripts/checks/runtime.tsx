@@ -280,6 +280,38 @@ if (renderBtn) {
   expect(true, 'gallery render button handled without crashing')
 } else errors.push('gallery render button missing')
 
+// 12 — interface languages, including RTL
+for (const lang of ['fr', 'ar', 'en'] as const) {
+  await act(async () => { useStore.getState().setLang(lang) })
+  await settle(70)
+  expect(document.documentElement.lang === lang, `html lang="${lang}"`)
+  expect(document.documentElement.dir === (lang === 'ar' ? 'rtl' : 'ltr'), `html dir="${document.documentElement.dir}" for ${lang}`)
+}
+await act(async () => { useStore.getState().setLang('fr') })
+await settle(70)
+expect(text().includes('\u00c9couter'), 'French navigation rendered')
+expect(text().includes('Que voulez-vous'), 'French section heading rendered')
+for (const [probe, name] of [
+  ['Comment une image de la Terre', 'method'],
+  ['Pas une fonction.', 'accessibility'],
+  ['Six pièces,', 'gallery'],
+  ['D\u2019où vient chaque nombre,', 'sources'],
+  ['Ce que nous avons fait,', 'about'],
+] as const) {
+  expect(text().includes(probe), `French ${name} heading rendered`)
+}
+expect(!text().includes('What do you want'), 'no English heading leaks through in French')
+await act(async () => { useStore.getState().setLang('ar') })
+await settle(70)
+expect(text().includes('\u0627\u0633\u062a\u0645\u0639'), 'Arabic navigation rendered')
+expect(text().includes('\u0633\u062a\u0651 \u0642\u0637\u0639'), 'Arabic gallery heading rendered')
+expect(text().includes('\u0644\u064a\u0633\u062a \u0645\u064a\u0632\u0629'), 'Arabic accessibility heading rendered')
+expect(document.querySelectorAll('[dir="rtl"], html[dir="rtl"]').length >= 0 && document.documentElement.dir === 'rtl', 'RTL active')
+await act(async () => { useStore.getState().setLang('en') })
+await settle(70)
+expect(text().includes('Listen'), 'back to English')
+expect(useStore.getState().lang === 'en', 'language persisted in the store')
+
 await settle(200)
 await act(async () => { probeRoot.unmount(); root.unmount() })
 await sleep(50)

@@ -52,12 +52,30 @@ export interface AgentReply {
  * ------------------------------------------------------------------ */
 
 const TRACK_WORDS: Record<string, string[]> = {
-  temperature: ['temperature', 'temp', 'heat', 'warming', 'warm', 'anomaly', 'fever', 'سخونة', 'حرارة', 'skaraz', 'حر'],
-  co2: ['co2', 'carbon', 'dioxide', 'keeling', 'ppm', 'كاربون', 'ثاني أكسيد'],
-  emissions: ['emission', 'emissions', 'fossil', 'coal', 'oil', 'combustion', 'carbon output', 'انبعاثات'],
-  seaice: ['ice', 'arctic', 'sea ice', 'glacier', 'freeze', 'frozen', 'جليد', 'قطب'],
-  sealevel: ['sea level', 'sea-level', 'ocean rise', 'tide', 'flood', 'coastal', 'مستوى البحر', 'بحر'],
-  oceanheat: ['ocean heat', 'ocean warming', 'heat content', 'zettajoule', 'deep ocean', 'حرارة المحيط'],
+  temperature: [
+    'temperature', 'temp', 'heat', 'warming', 'warm', 'anomaly', 'fever', 'سخونة', 'حرارة', 'skaraz', 'حر',
+    'température', 'rechauffement', 'réchauffement', 'anomalie', 'chaud',
+  ],
+  co2: [
+    'co2', 'carbon', 'dioxide', 'keeling', 'ppm', 'كاربون', 'ثاني أكسيد',
+    'dioxyde', 'carbone', 'co₂',
+  ],
+  emissions: [
+    'emission', 'emissions', 'fossil', 'coal', 'oil', 'combustion', 'carbon output', 'انبعاثات',
+    'émissions', 'combustibles', 'charbon', 'pétrole',
+  ],
+  seaice: [
+    'ice', 'arctic', 'sea ice', 'glacier', 'freeze', 'frozen', 'جليد', 'قطب',
+    'glace', 'banquise', 'arctique',
+  ],
+  sealevel: [
+    'sea level', 'sea-level', 'ocean rise', 'tide', 'flood', 'coastal', 'مستوى البحر', 'بحر',
+    'niveau de la mer', 'marée', 'inondation', 'côte',
+  ],
+  oceanheat: [
+    'ocean heat', 'ocean warming', 'heat content', 'zettajoule', 'deep ocean', 'حرارة المحيط',
+    'océan', 'chaleur des océans',
+  ],
 }
 
 export function detectTracks(q: string): Track[] {

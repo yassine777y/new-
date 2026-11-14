@@ -10,6 +10,7 @@ import { TRACKS } from '@/data/tracks'
 import { onBus } from '@/lib/bus'
 import { Badge, Panel, Reveal, SectionHeading } from '@/components/ui/Primitives'
 import { IconArrow, IconInfo } from '@/components/ui/Icon'
+import { useI18n } from '@/i18n/useI18n'
 
 const GROUPS: Array<{ title: string; note: string; ids: string[] }> = [
   {
@@ -30,6 +31,7 @@ const GROUPS: Array<{ title: string; note: string; ids: string[] }> = [
 ]
 
 export function Sources() {
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [highlight, setHighlight] = useState<string | null>(null)
   const refs = useRef<Record<string, HTMLLIElement | null>>({})
@@ -88,12 +90,12 @@ export function Sources() {
           <Badge tone="neutral">{id}</Badge>
         </div>
         <p className="mt-2.5 text-[12.5px] leading-relaxed text-mist-200">
-          <span className="label-mono mr-1.5">used for</span>
+          <span className="label-mono me-1.5">{t('sources.usedFor')}</span>
           {s.usedFor}
         </p>
         {s.note && <p className="mt-1.5 text-[11.5px] leading-relaxed text-mist-400">{s.note}</p>}
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="label-mono mr-1">appears in</span>
+          <span className="label-mono me-1">{t('sources.appearsIn')}</span>
           {tracks.length ? (
             tracks.map((t) => (
               <span
@@ -111,9 +113,9 @@ export function Sources() {
             href={s.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="data-mono ml-auto inline-flex items-center gap-1 text-[10.5px] text-mist-400 transition hover:text-sonic-200"
+            className="data-mono ms-auto inline-flex items-center gap-1 text-[10.5px] text-mist-400 transition hover:text-sonic-200"
           >
-            open <IconArrow size={11} />
+            {t('sources.open')} <IconArrow size={11} />
           </a>
         </div>
       </li>
@@ -123,13 +125,13 @@ export function Sources() {
   return (
     <section id="sources" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <SectionHeading
-        eyebrow="Sources · every claim, cited"
+        eyebrow={t('sources.eyebrow')}
         title={
           <>
-            Where every number, pixel <span className="text-gradient">and idea comes from</span>
+            {t('sources.title1')} <span className="text-gradient">{t('sources.title2')}</span>
           </>
         }
-        lede="Nothing in this app is unsourced. Each panel carries a badge that lands here; each entry states the publisher, the licence, and precisely what was copied. Where we model rather than measure — the spatial fields on the maps and the globe — the panel says so in plain words next to the visualisation."
+        lede={t('sources.lede')}
       />
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -138,12 +140,12 @@ export function Sources() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter sources — try “ice”, “satellite”, “licence”"
-            aria-label="Filter sources"
+            placeholder={t('sources.filter')}
+            aria-label={t('sources.filter')}
             className="min-w-0 flex-1 bg-transparent text-[13px] text-mist-50 placeholder:text-mist-400 focus:outline-none"
           />
         </label>
-        <Badge tone="cyan">{Object.keys(SOURCES).length} entries</Badge>
+        <Badge tone="cyan">{Object.keys(SOURCES).length} {t('sources.entries')}</Badge>
       </div>
 
       {filtered ? (
@@ -167,28 +169,28 @@ export function Sources() {
 
       <Reveal className="mt-10">
         <Panel className="p-5">
-          <span className="label-mono mb-2 block">Provenance notes — read these with the maps</span>
+          <span className="label-mono mb-2 block">{t('sources.notes')}</span>
           <ul className="space-y-2.5 text-[12.5px] leading-relaxed text-mist-200">
             <li>
-              <span className="data-mono mr-2 text-sonic-300">01</span>
+              <span className="data-mono me-2 text-sonic-300">01</span>
               Time series are the published annual values, rounded for distribution. Where a record only exists as decade or
               five-year anchors (emissions, sea level before 1993, ocean heat), the series is interpolated and the interface
               labels it as reconstructed.
             </li>
             <li>
-              <span className="data-mono mr-2 text-sonic-300">02</span>
+              <span className="data-mono me-2 text-sonic-300">02</span>
               Spatial fields on the 2D map and 3D globe are modelled from published characteristics — Arctic amplification,
               the CO₂ inter-hemispheric gradient, the regional sea-ice edge, emission plume geography, the AR6 ocean warming
               pattern. They are illustrative, not pixel copies of a gridded product. Each map states this beneath it and links
               to the real dataset.
             </li>
             <li>
-              <span className="data-mono mr-2 text-sonic-300">03</span>
+              <span className="data-mono me-2 text-sonic-300">03</span>
               The land/ocean mask is derived at runtime from the Blue Marble texture itself, and was checked against the
               published land fraction (≈29 %): the derived mask gives ≈31 % including ice.
             </li>
             <li>
-              <span className="data-mono mr-2 text-sonic-300">04</span>
+              <span className="data-mono me-2 text-sonic-300">04</span>
               Earth textures are NASA imagery redistributed through the three.js examples set; typefaces are Space Grotesk and
               IBM Plex Mono under the SIL Open Font License, self-hosted in this repository.
             </li>

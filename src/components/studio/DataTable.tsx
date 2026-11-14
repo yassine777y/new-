@@ -36,7 +36,7 @@ export function DataTable({ track }: { track: Track }) {
         </Button>
       </div>
       <div className="max-h-72 overflow-auto rounded-xl border border-white/10">
-        <table className="w-full border-collapse text-left">
+        <table className="w-full border-collapse text-start">
           <caption className="sr-only">
             {track.title}: {track.tagline}, values in {track.unitSpoken} from {range[0]} to {range[1]}. Selecting a row moves
             the playhead to that year.
@@ -76,7 +76,7 @@ export function DataTable({ track }: { track: Track }) {
                 >
                   <th scope="row" className="data-mono px-3 py-1.5 text-[12px] font-medium text-mist-100">
                     {y}
-                    {active && <span className="ml-1.5 text-[10px] text-sonic-300">◂ playhead</span>}
+                    {active && <span className="ms-1.5 text-[10px] text-sonic-300">◂ playhead</span>}
                   </th>
                   <td className="data-mono px-3 py-1.5 text-[12px]" style={{ color: track.color }}>
                     {fmtSigned(p.v, track.digits)}

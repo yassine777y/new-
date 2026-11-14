@@ -90,5 +90,134 @@ ok(detectTracks('show me the sea ice and co2').length >= 2, 'detectTracks')
 ok(detectYears('from 1900 to 2000').length === 2, 'detectYears')
 ok(SUGGESTIONS.length >= 6, 'suggestions')
 
+// --- the animated header mark (pure maths, DOM-free)
+{
+  const { buildGlobeGeometry, paintGlobe, anomalyT, SPIN_DEG_PER_SEC, DRIFT_SECONDS } = await import('@/components/layout/globeMark')
+  const geo = buildGlobeGeometry(72)
+  ok(geo.indices.length > 2000, `globe geometry covers ${geo.indices.length} pixels`)
+  ok(geo.indices.every((i) => i >= 0 && i < 72 * 72), 'geometry indices in range')
+  ok(geo.latIdx.every((l) => l === -1 || (l >= 0 && l < 180)), 'latitude rows valid')
+  ok(geo.shade.every((s2) => Number.isFinite(s2) && s2 >= 0 && s2 <= 2), 'shade finite')
+  ok(geo.rim.every((r) => Number.isFinite(r) && r >= 0 && r <= 1), 'rim in [0,1]')
+  ok(SPIN_DEG_PER_SEC > 0 && DRIFT_SECONDS > 0, 'animation constants positive')
+
+  const data = new Uint8ClampedArray(72 * 72 * 4)
+  const cold = paintGlobe(geo, data, { spin: 12, t: 0, mask: null })
+  const warm = paintGlobe(geo, data, { spin: 12, t: 1, mask: null })
+  ok(cold.painted > 1500 && warm.painted > 1500, 'disc actually painted')
+  ok(cold.meanB > cold.meanR, `cold frame is blue (${cold.meanR.toFixed(1)},${cold.meanB.toFixed(1)})`)
+  ok(warm.meanR > warm.meanB, `warm frame is red (${warm.meanR.toFixed(1)},${warm.meanB.toFixed(1)})`)
+  ok(warm.meanR - cold.meanR > 8, `the mark visibly warms (ΔR=${(warm.meanR - cold.meanR).toFixed(1)})`)
+  ok(cold.landFraction > 0.15 && cold.landFraction < 0.75, `land fraction plausible (${cold.landFraction.toFixed(2)})`)
+  ok(data.every((v) => Number.isFinite(v)), 'no NaN leaked into the pixel buffer')
+
+  // spinning must change what is drawn (it is not a static disc)
+  const a = new Uint8ClampedArray(72 * 72 * 4)
+  const b = new Uint8ClampedArray(72 * 72 * 4)
+  paintGlobe(geo, a, { spin: 0, t: 0.4, mask: null })
+  paintGlobe(geo, b, { spin: 90, t: 0.4, mask: null })
+  let diff = 0
+  for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 2) diff++
+  ok(diff > 200, `spin changes the image (${diff} pixels differ)`)
+
+  // a synthetic mask must be honoured: all-land vs all-ocean
+  const allLand = new Uint8Array(360 * 180).fill(1)
+  const allOcean = new Uint8Array(360 * 180).fill(0)
+  const d1 = new Uint8ClampedArray(72 * 72 * 4)
+  const d2 = new Uint8ClampedArray(72 * 72 * 4)
+  const r1 = paintGlobe(geo, d1, { spin: 30, t: 0.5, mask: allLand })
+  const r2 = paintGlobe(geo, d2, { spin: 30, t: 0.5, mask: allOcean })
+  ok(Math.abs(r1.landFraction - 1) < 0.02 && r2.landFraction < 0.02, 'mask drives the classification')
+  ok(Math.abs(r1.meanR - r2.meanR) > 4, 'land and ocean read differently')
+
+  ok(anomalyT(0, -1, 1) === 0.5, 'anomalyT midpoint')
+  ok(anomalyT(5, -1, 1) === 1 && anomalyT(-5, -1, 1) === 0, 'anomalyT clamps')
+  ok(anomalyT(1, 1, 1) === 0.5, 'anomalyT survives a flat extent')
+}
+
+// --- MIDI export
+{
+  const { scoreToMidi, buildTempoMap, ticksAt, vlq, PPQ } = await import('@/audio/midi')
+  ok(vlq(0).join(',') === '0' && vlq(127).join(',') === '127' && vlq(128).join(',') === '129,0' && vlq(16383).join(',') === '255,127', `vlq ${vlq(128)} ${vlq(16383)}`)
+  ok(vlq(2097151).join(',') === '255,255,127', 'vlq 3 bytes')
+
+  for (const t of TRACKS) {
+    const s = buildScore(t, 1900, 2000, 30, { intensity: 0.85 })
+    const map = buildTempoMap(s)
+    ok(map.length >= 2, `${t.id}: tempo map has ${map.length} segments`)
+    ok(map.every((m) => Number.isFinite(m.tick) && m.bpm > 10 && m.bpm < 300), `${t.id}: tempo map sane`)
+    ok(map.every((m, i) => i === 0 || m.tick > map[i - 1].tick && m.time > map[i - 1].time), `${t.id}: tempo map monotonic`)
+    ok(ticksAt(map, 0) === 0 && ticksAt(map, 30) > ticksAt(map, 15), `${t.id}: ticksAt monotonic`)
+
+    const midi = scoreToMidi(s, { title: t.title, text: s.ruleSummary })
+    const b = midi.bytes
+    ok(b.length > 500, `${t.id}: midi ${b.length} bytes`)
+    ok(String.fromCharCode(b[0], b[1], b[2], b[3]) === 'MThd', `${t.id}: MThd magic`)
+    // header: 4 magic + 4 length + 6 payload = 14 bytes before the first MTrk
+    ok(((b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7]) === 6, `${t.id}: header length 6`)
+    const ntrks = (b[10] << 8) | b[11]
+    const div = (b[12] << 8) | b[13]
+    ok(((b[8] << 8) | b[9]) === 1, `${t.id}: format 1`)
+    ok(div === PPQ, `${t.id}: division ${div}`)
+    ok(ntrks === midi.tracks && ntrks >= 2, `${t.id}: ${ntrks} tracks`)
+    ok(midi.noteCount === s.notes.length, `${t.id}: note count ${midi.noteCount}/${s.notes.length}`)
+
+    // walk every MTrk chunk: lengths must add up and each track must end with end-of-track
+    let off = 14
+    let walked = 0
+    let parsed = 0
+    for (let i = 0; i < ntrks; i++) {
+      ok(String.fromCharCode(b[off], b[off + 1], b[off + 2], b[off + 3]) === 'MTrk', `${t.id}: MTrk magic ${i}`)
+      const len = (b[off + 4] << 24) | (b[off + 5] << 16) | (b[off + 6] << 8) | b[off + 7]
+      ok(len > 0 && off + 8 + len <= b.length, `${t.id}: track ${i} length ${len} fits`)
+      const end = off + 8 + len
+      ok(b[end - 3] === 0xff && b[end - 2] === 0x2f && b[end - 1] === 0x00, `${t.id}: track ${i} ends with end-of-track`)
+      off = end
+      walked++
+      parsed += len
+    }
+    ok(walked === ntrks && off === b.length, `${t.id}: chunk lengths exactly cover the file (${off}/${b.length})`)
+    ok(parsed > 0, `${t.id}: payload non-empty`)
+    ok(b.every((v) => Number.isFinite(v) && v >= 0 && v <= 255), `${t.id}: all bytes valid`)
+    ok(midi.channels.every((c) => c >= 0 && c <= 15), `${t.id}: channels valid`)
+    ok(midi.channels.includes(9) === s.notes.some((n) => ['tick', 'shaker', 'thump'].includes(n.voice)), `${t.id}: drums channel present iff percussion notes exist`)
+  }
+}
+
+// --- interface languages
+{
+  const { ALL_KEYS, LANGS, DICTS, translate, dirFor, speechLangFor, missingKeys } = await import('@/i18n')
+  ok(ALL_KEYS.length >= 100, `dictionary covers ${ALL_KEYS.length} keys`)
+  for (const lang of LANGS) {
+    ok(dirFor(lang) === (lang === 'ar' ? 'rtl' : 'ltr'), `${lang}: direction ${dirFor(lang)}`)
+    ok(/^[a-z]{2}(-[A-Z]{2})?$/.test(speechLangFor(lang)), `${lang}: speech tag ${speechLangFor(lang)}`)
+    const miss = missingKeys(lang)
+    ok(miss.length === 0, `${lang}: ${miss.length} missing keys (${miss.slice(0, 8).join(', ')})`)
+    let bad = 0
+    for (const k of ALL_KEYS) {
+      const v = translate(lang, k)
+      if (typeof v !== 'string' || v.length === 0 || v === k || /[{}]/.test(v)) bad++
+    }
+    ok(bad === 0, `${lang}: ${bad} keys do not translate cleanly`)
+    ok(Object.keys(DICTS[lang] ?? {}).length > 0, `${lang}: dictionary present`)
+  }
+  ok(translate('fr', 'nav.listen') === '\u00c9couter', `fr nav.listen = ${translate('fr', 'nav.listen')}`)
+  ok(translate('ar', 'nav.listen').length > 1, 'ar nav.listen translated')
+  ok(translate('en', 'hero.title1') === 'Hear the Earth', 'en hero title')
+  // every section heading ships in all three languages, split so the gradient
+  // span can stay on the second half of the sentence in any word order
+  for (const section of ['listen', 'method', 'access', 'gallery', 'sources', 'about']) {
+    for (const lang of LANGS) {
+      const a = translate(lang, `${section}.title1` as never)
+      const b = translate(lang, `${section}.title2` as never)
+      const lede = translate(lang, `${section}.lede` as never)
+      ok(a.length > 2 && b.length > 2, `${lang} ${section}: two-part heading present`)
+      ok(lede.length > 40, `${lang} ${section}: lede is a real sentence (${lede.length} chars)`)
+    }
+  }
+  // unknown keys fall back to themselves instead of throwing
+  ok(translate('ar', 'nope.not.a.key' as never) === 'nope.not.a.key', 'unknown key falls back')
+}
+
 process.exitCode = fails === 0 ? 0 : 1
 console.log(fails === 0 ? 'ALL LOGIC CHECKS PASSED' : `${fails} FAILURES`)

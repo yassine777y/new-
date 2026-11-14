@@ -321,7 +321,7 @@ export function FrameStudio({ track }: { track: Track }) {
               <span className="label-mono">Column → note mapping (first 12)</span>
             </div>
             <div className="max-h-56 overflow-auto">
-              <table className="w-full border-collapse text-left">
+              <table className="w-full border-collapse text-start">
                 <caption className="sr-only">How each vertical strip of the frame maps to a note</caption>
                 <thead className="sticky top-0 bg-void-850/95">
                   <tr>

@@ -6,17 +6,20 @@ import { SCALE_LABELS } from '@/audio/scales'
 import { engine } from '@/audio/engine'
 import { emit } from '@/lib/bus'
 import { Badge, Button, Slider, Toggle } from '@/components/ui/Primitives'
+import { useI18n } from '@/i18n/useI18n'
+import type { I18nKey } from '@/i18n'
 import { IconMute, IconVolume, IconWave } from '@/components/ui/Icon'
 
-const LAYERS: Array<{ key: 'drone' | 'melody' | 'rhythm' | 'shimmer' | 'sub'; label: string; hint: string }> = [
-  { key: 'drone', label: 'Drone', hint: 'Continuous pad that follows the value' },
-  { key: 'melody', label: 'Melody', hint: 'Quantised notes, one per beat' },
-  { key: 'rhythm', label: 'Rhythm', hint: 'Percussion driven by the rate of change' },
-  { key: 'shimmer', label: 'Shimmer', hint: 'High glass harmonics on extremes' },
-  { key: 'sub', label: 'Sub', hint: 'Low gravity notes every eight beats' },
+const LAYERS: Array<{ key: 'drone' | 'melody' | 'rhythm' | 'shimmer' | 'sub'; label: I18nKey; hint: string }> = [
+  { key: 'drone', label: 'ctrl.drone', hint: 'Continuous pad that follows the value' },
+  { key: 'melody', label: 'ctrl.melody', hint: 'Quantised notes, one per beat' },
+  { key: 'rhythm', label: 'ctrl.rhythm', hint: 'Percussion driven by the rate of change' },
+  { key: 'shimmer', label: 'ctrl.shimmer', hint: 'High glass harmonics on extremes' },
+  { key: 'sub', label: 'ctrl.sub', hint: 'Low gravity notes every eight beats' },
 ]
 
 export function SonificationControls({ track }: { track: Track }) {
+  const { t } = useI18n()
   const layers = useStore((s) => s.layers)
   const toggleLayer = useStore((s) => s.toggleLayer)
   const intensity = useStore((s) => s.intensity)
@@ -84,11 +87,11 @@ export function SonificationControls({ track }: { track: Track }) {
               aria-pressed={layers[l.key]}
               onClick={() => {
                 toggleLayer(l.key)
-                announce(`${l.label} layer ${layers[l.key] ? 'off' : 'on'}`)
+                announce(`${t(l.label)} layer ${layers[l.key] ? 'off' : 'on'}`)
                 emit({ type: 'rebuild-score', reason: 'layers' })
               }}
             >
-              {l.label}
+              {t(l.label)}
             </Button>
           ))}
         </div>
@@ -96,7 +99,7 @@ export function SonificationControls({ track }: { track: Track }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Slider
-          label="Intensity"
+          label={t('ctrl.intensity')}
           value={intensity}
           min={0.1}
           max={1}
@@ -106,7 +109,7 @@ export function SonificationControls({ track }: { track: Track }) {
           valueText={`${Math.round(intensity * 100)} percent intensity`}
         />
         <Slider
-          label="Reverb"
+          label={t('ctrl.reverb')}
           value={reverb}
           min={0}
           max={1}
@@ -126,7 +129,7 @@ export function SonificationControls({ track }: { track: Track }) {
             toggleMute()
             announce(muted ? 'Audio unmuted' : 'Audio muted')
           }}
-          aria-label={muted ? 'Unmute' : 'Mute'}
+          aria-label={muted ? t('top.unmute') : t('top.mute')}
           aria-pressed={muted}
           className="text-mist-200 transition hover:text-sonic-200"
         >
@@ -134,7 +137,7 @@ export function SonificationControls({ track }: { track: Track }) {
         </button>
         <Slider
           className="flex-1"
-          label="Volume"
+          label={t('top.volume')}
           value={volume}
           min={0}
           max={1}

@@ -11,10 +11,12 @@ import { buildScore } from '@/audio/score'
 import { renderScore } from '@/audio/render'
 import { engine } from '@/audio/engine'
 import { audioBufferToWav, downloadBlob, peakEnvelope } from '@/lib/wav'
+import { midiFileName, scoreToMidiBlob } from '@/audio/midi'
 import { useStore } from '@/state/store'
 import { fmtClock } from '@/lib/format'
 import { Badge, Button, Panel, Reveal, SectionHeading, SourceBadge, Spinner } from '@/components/ui/Primitives'
-import { IconDownload, IconPause, IconPlay, IconWave, TrackIcon } from '@/components/ui/Icon'
+import { IconDownload, IconPause, IconPlay, IconSpark, IconWave, TrackIcon } from '@/components/ui/Icon'
+import { useI18n } from '@/i18n/useI18n'
 
 const PIECE_SECONDS = 45
 
@@ -26,6 +28,7 @@ interface PieceState {
 }
 
 export function Gallery() {
+  const { t: tr } = useI18n()
   const [pieces, setPieces] = useState<Record<string, PieceState>>({})
   const buffers = useRef<Record<string, AudioBuffer>>({})
   const intensity = useStore((s) => s.intensity)
@@ -65,20 +68,31 @@ export function Gallery() {
   return (
     <section id="gallery" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <SectionHeading
-        eyebrow="Gallery · step 5"
+        eyebrow={tr('gallery.eyebrow')}
         title={
           <>
-            Six pieces, <span className="text-gradient">composed by the data</span>
+            {tr('gallery.title1')} <span className="text-gradient">{tr('gallery.title2')}</span>
           </>
         }
-        lede="Each piece below is a full-record rendering — the entire dataset compressed into forty-five seconds of music. Press render and the browser computes it offline with the same voices, reverb and ruleset as live playback, then hands you a 16-bit stereo WAV. No loops, no samples, no pre-recorded audio: every sound is a function of the numbers."
+        lede={tr('gallery.lede')}
       />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <SourceBadge id="webaudio" label="OfflineAudioContext" />
         <Badge tone="cyan">16-bit · 44.1 kHz · stereo</Badge>
         <Button size="sm" variant="ghost" onClick={stopAll}>
-          <IconPause size={13} /> Stop playback
+          <IconPause size={13} /> {tr('gallery.stop')}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          title="Fullscreen, no chrome: the six datasets play and narrate themselves (A)"
+          onClick={() => {
+            void engine.init()
+            useStore.getState().setAmbient(true)
+          }}
+        >
+          <IconSpark size={13} /> {tr('gallery.installation')}
         </Button>
       </div>
 
@@ -150,7 +164,7 @@ export function Gallery() {
                       }}
                     >
                       {busy ? <Spinner size={13} /> : p.status === 'playing' ? <IconPause size={13} /> : <IconPlay size={13} />}
-                      {busy ? 'Rendering' : p.status === 'playing' ? 'Playing' : p.status === 'ready' ? 'Play' : 'Render & play'}
+                      {busy ? tr('gallery.rendering') : p.status === 'playing' ? tr('gallery.playing') : p.status === 'ready' ? tr('gallery.play') : tr('gallery.render')}
                     </Button>
                     <Button
                       size="sm"
@@ -163,7 +177,19 @@ export function Gallery() {
                         announce('WAV download started')
                       }}
                     >
-                      <IconDownload size={13} /> WAV
+                      <IconDownload size={13} /> {tr('gallery.wav')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      title="The same piece as a General MIDI file — tempo map and event markers included"
+                      onClick={() => {
+                        const score = buildScore(t, t.yearSpan[0], t.yearSpan[1], PIECE_SECONDS, { intensity })
+                        downloadBlob(scoreToMidiBlob(score, { title: `${t.title} · ${t.yearSpan[0]}\u2013${t.yearSpan[1]}` }), midiFileName(t.id, t.yearSpan[0], t.yearSpan[1]))
+                        announce(`MIDI exported: ${score.noteCount} notes, ${t.sonification.scale} scale.`)
+                      }}
+                    >
+                      <IconDownload size={13} /> {tr('studio.exportMidi')}
                     </Button>
                     {p.buffer && <span className="data-mono text-[10.5px] text-mist-400">{fmtClock(p.buffer.duration)}</span>}
                   </div>
@@ -177,7 +203,7 @@ export function Gallery() {
       <Reveal className="mt-6 grid gap-5 lg:grid-cols-2">
         <Panel className="p-5">
           <span className="label-mono mb-2 flex items-center gap-2">
-            <IconWave size={12} /> The creative process
+            <IconWave size={12} /> {tr('gallery.process')}
           </span>
           <div className="space-y-3 text-[13px] leading-relaxed text-mist-200">
             <p>
@@ -200,7 +226,7 @@ export function Gallery() {
         </Panel>
 
         <Panel className="p-5">
-          <span className="label-mono mb-2 block">Reproduce it</span>
+          <span className="label-mono mb-2 block">{tr('gallery.reproduce')}</span>
           <p className="text-[13px] leading-relaxed text-mist-200">
             The whole pipeline is deterministic. Given a track, a window and an intensity,{' '}
             <code className="data-mono rounded bg-white/8 px-1.5 py-0.5 text-[11.5px] text-sonic-200">buildScore()</code>{' '}

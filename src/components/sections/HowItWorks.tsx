@@ -10,6 +10,7 @@ import { SCALE_LABELS, degreeToMidi, midiToName, valueToMidi } from '@/audio/sca
 import type { ScaleName, TimbreName } from '@/data/types'
 import { engine } from '@/audio/engine'
 import { useStore } from '@/state/store'
+import { useI18n } from '@/i18n/useI18n'
 import { Badge, Button, Panel, Reveal, SectionHeading, SourceBadge } from '@/components/ui/Primitives'
 import { IconArrow, IconChart, IconFrame, IconPlay, IconSpark, IconWave, TrackIcon } from '@/components/ui/Icon'
 
@@ -142,6 +143,7 @@ const MAPPINGS: Array<{ from: string; to: string; why: string; demo: () => void;
 ]
 
 export function HowItWorks() {
+  const { t } = useI18n()
   const [scale, setScale] = useState<ScaleName>('aeolian')
   const intensity = useStore((s) => s.intensity)
   const announce = useStore((s) => s.announce)
@@ -164,13 +166,13 @@ export function HowItWorks() {
   return (
     <section id="method" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <SectionHeading
-        eyebrow="Method · step 3"
+        eyebrow={t('method.eyebrow')}
         title={
           <>
-            How a frame of the Earth <span className="text-gradient">becomes a sound</span>
+            {t('method.title1')} <span className="text-gradient">{t('method.title2')}</span>
           </>
         }
-        lede="Two paths into the same soundtrack. The data path reads the published record and maps it through a musical ruleset. The pixel path scans an actual image left to right, the way NASA's Chandra sonifications do. Both are generated live, in your browser, with no pre-recorded audio."
+        lede={t('method.lede')}
       />
 
       <div className="mt-10 flex flex-wrap gap-2">
@@ -196,7 +198,7 @@ export function HowItWorks() {
                 <h3 className="text-[14.5px] font-semibold text-mist-50">{p.title}</h3>
                 <p className="mt-1.5 text-[12px] leading-relaxed text-mist-300">{p.body}</p>
                 {i < PIPELINE.length - 1 && (
-                  <span className="absolute top-1/2 -right-3 hidden text-mist-500 xl:block" aria-hidden>
+                  <span className="absolute top-1/2 -end-3 hidden text-mist-500 xl:block" aria-hidden>
                     <IconArrow size={16} />
                   </span>
                 )}
@@ -252,7 +254,7 @@ export function HowItWorks() {
               <button
                 key={s}
                 onClick={() => playScale(s)}
-                className={`rounded-lg border px-3 py-2 text-left transition ${
+                className={`rounded-lg border px-3 py-2 text-start transition ${
                   scale === s ? 'border-sonic-300/50 bg-sonic-300/10' : 'border-white/10 bg-white/[0.02] hover:border-white/25'
                 }`}
               >

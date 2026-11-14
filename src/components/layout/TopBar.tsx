@@ -8,18 +8,22 @@ import { emit } from '@/lib/bus'
 import { fmtSigned } from '@/lib/format'
 import { sampleSeries } from '@/lib/math'
 import { Badge, Button, IconButton, Toggle } from '@/components/ui/Primitives'
-import { IconAccess, IconClose, IconMic, IconMute, IconPause, IconPlay, IconVolume, TrackIcon } from '@/components/ui/Icon'
+import { Logo } from './Logo'
+import { LANGS, LANG_META } from '@/i18n'
+import { useI18n } from '@/i18n/useI18n'
+import { IconAccess, IconClose, IconMic, IconMute, IconPause, IconPlay, IconSpark, IconVolume, TrackIcon } from '@/components/ui/Icon'
 
 const NAV = [
-  { id: 'listen', label: 'Listen' },
-  { id: 'studio', label: 'Studio' },
-  { id: 'method', label: 'Method' },
-  { id: 'access', label: 'Access' },
-  { id: 'gallery', label: 'Gallery' },
-  { id: 'sources', label: 'Sources' },
-]
+  { id: 'listen', key: 'nav.listen' },
+  { id: 'studio', key: 'nav.studio' },
+  { id: 'method', key: 'nav.method' },
+  { id: 'access', key: 'nav.access' },
+  { id: 'gallery', key: 'nav.gallery' },
+  { id: 'sources', key: 'nav.sources' },
+] as const
 
 export function TopBar() {
+  const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
   const [menu, setMenu] = useState(false)
   const [a11yOpen, setA11yOpen] = useState(false)
@@ -38,6 +42,9 @@ export function TopBar() {
   const setA11y = useStore((s) => s.setA11y)
   const agentOpen = useStore((s) => s.agentOpen)
   const setAgentOpen = useStore((s) => s.setAgentOpen)
+  const setAmbient = useStore((s) => s.setAmbient)
+  const lang = useStore((s) => s.lang)
+  const setLang = useStore((s) => s.setLang)
   const level = useStore((s) => s.level)
   const a11yRef = useRef<HTMLDivElement>(null)
 
@@ -87,22 +94,20 @@ export function TopBar() {
       }`}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-10">
-        <button onClick={() => go('hero')} className="group flex shrink-0 items-center gap-2.5" aria-label="Earth Jukebox — back to top">
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full border border-sonic-300/40 bg-sonic-300/10">
-            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 text-sonic-300" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M3 12c3-3.4 6 3.4 9 0s6 3.4 9 0" />
-              <path d="M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18" opacity=".55" />
-            </svg>
-            {isPlaying && <span className="absolute inset-0 animate-pulse-ring rounded-full bg-sonic-300/25" aria-hidden />}
+        <button onClick={() => go('hero')} className="group flex shrink-0 items-center gap-2.5" aria-label={t('brand.back')}>
+          <span className="relative flex h-9 w-9 items-center justify-center">
+            <Logo size={36} />
+            {isPlaying && (
+              <span className="pointer-events-none absolute -inset-0.5 animate-pulse-ring rounded-full bg-sonic-300/20" aria-hidden />
+            )}
           </span>
-          <span className="hidden text-left sm:block">
+          <span className="hidden text-start sm:block">
             <span className="block text-[13.5px] leading-tight font-semibold text-mist-50">Earth Jukebox</span>
             <span className="label-mono block text-[9px]">NASA Space Apps 2026</span>
           </span>
         </button>
 
-        <nav className="mx-auto hidden items-center gap-0.5 lg:flex" aria-label="Sections">
+        <nav className="mx-auto hidden items-center gap-0.5 lg:flex" aria-label={t('nav.menu')}>
           {NAV.map((n) => (
             <button
               key={n.id}
@@ -112,17 +117,17 @@ export function TopBar() {
                 section === n.id ? 'text-sonic-200' : 'text-mist-300 hover:bg-white/6 hover:text-mist-100'
               }`}
             >
-              {n.label}
+              {t(n.key)}
               {section === n.id && <span className="absolute inset-x-3 -bottom-0.5 h-px bg-sonic-300/70" aria-hidden />}
             </button>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 lg:ml-0">
+        <div className="ms-auto flex items-center gap-2 lg:ms-0">
           {/* mini transport */}
           <div className="hidden items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 md:flex">
             <IconButton
-              label={isPlaying ? 'Pause' : 'Play'}
+              label={isPlaying ? t('top.pause') : t('top.play')}
               variant={isPlaying ? 'primary' : 'ghost'}
               className="h-7 w-7"
               onClick={() => {
@@ -133,7 +138,7 @@ export function TopBar() {
             >
               {isPlaying ? <IconPause size={13} /> : <IconPlay size={13} />}
             </IconButton>
-            <button onClick={() => go('studio')} className="flex min-w-0 items-center gap-2 text-left">
+            <button onClick={() => go('studio')} className="flex min-w-0 items-center gap-2 text-start">
               <span style={{ color: track.color }}>
                 <TrackIcon id={track.id} size={15} />
               </span>
@@ -162,7 +167,7 @@ export function TopBar() {
 
           {/* volume */}
           <div className="hidden items-center gap-1.5 lg:flex">
-            <IconButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute} className="h-8 w-8">
+            <IconButton label={muted ? t('top.unmute') : t('top.mute')} onClick={toggleMute} className="h-8 w-8">
               {muted ? <IconMute size={15} /> : <IconVolume size={15} />}
             </IconButton>
             <input
@@ -171,7 +176,7 @@ export function TopBar() {
               max={1}
               step={0.01}
               value={volume}
-              aria-label="Master volume"
+              aria-label={t('top.volume')}
               aria-valuetext={`${Math.round(volume * 100)} percent`}
               onChange={(e) => {
                 const v = Number(e.target.value)
@@ -182,43 +187,75 @@ export function TopBar() {
             />
           </div>
 
-          <IconButton label="Ask the guide agent by voice" variant={agentOpen ? 'outline' : 'ghost'} className="h-8 w-8" onClick={() => setAgentOpen(!agentOpen)}>
+          <div
+            className="hidden items-center gap-0.5 rounded-full border border-white/12 bg-white/4 p-0.5 md:flex"
+            role="group"
+            aria-label={t('top.language')}
+          >
+            {LANGS.map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                aria-pressed={l === lang}
+                title={LANG_META[l].label}
+                className={`rounded-full px-2 py-1 text-[10.5px] font-semibold tracking-wide transition ${
+                  l === lang ? 'bg-sonic-300/20 text-sonic-100' : 'text-mist-400 hover:text-mist-100'
+                }`}
+              >
+                {l === 'ar' ? 'ع' : l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <IconButton
+            label={t('top.install')}
+            className="hidden h-8 w-8 sm:inline-flex"
+            onClick={() => {
+              const next = !useStore.getState().ambient
+              setAmbient(next)
+              if (next) void engine.init()
+            }}
+          >
+            <IconSpark size={15} />
+          </IconButton>
+
+          <IconButton label={t('top.agent')} variant={agentOpen ? 'outline' : 'ghost'} className="h-8 w-8" onClick={() => setAgentOpen(!agentOpen)}>
             <IconMic size={15} />
           </IconButton>
 
           <div className="relative" ref={a11yRef}>
-            <IconButton label="Accessibility settings" variant={a11yOpen ? 'outline' : 'ghost'} className="h-8 w-8" onClick={() => setA11yOpen((v) => !v)} aria-expanded={a11yOpen}>
+            <IconButton label={t('top.a11y')} variant={a11yOpen ? 'outline' : 'ghost'} className="h-8 w-8" onClick={() => setA11yOpen((v) => !v)} aria-expanded={a11yOpen}>
               <IconAccess size={15} />
             </IconButton>
             {a11yOpen && (
-              <div className="glass absolute right-0 z-50 mt-2 w-[min(88vw,320px)] rounded-2xl p-4">
+              <div className="glass absolute end-0 z-50 mt-2 w-[min(88vw,320px)] rounded-2xl p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="label-mono">Accessibility</span>
-                  <IconButton label="Close accessibility settings" className="h-6 w-6" onClick={() => setA11yOpen(false)}>
+                  <IconButton label={t('common.close')} className="h-6 w-6" onClick={() => setA11yOpen(false)}>
                     <IconClose size={13} />
                   </IconButton>
                 </div>
                 <div className="space-y-3">
                   <Toggle
-                    label="High contrast"
+                    label={t('access.highContrast')}
                     description="Stronger borders and pure-white text"
                     checked={a11y.highContrast}
                     onChange={(v) => setA11y({ highContrast: v })}
                   />
                   <Toggle
-                    label="Reduced motion"
+                    label={t('access.reduceMotion')}
                     description="Stops the globe spinning and disables transitions"
                     checked={a11y.reduceMotion}
                     onChange={(v) => setA11y({ reduceMotion: v })}
                   />
                   <Toggle
-                    label="Text-only mode"
+                    label={t('access.textOnly')}
                     description="Turns off WebGL; charts, tables and audio remain"
                     checked={a11y.textOnly}
                     onChange={(v) => setA11y({ textOnly: v })}
                   />
                   <Toggle
-                    label="Verbose announcements"
+                    label={t('access.verbose')}
                     description="Announce every value change to a screen reader"
                     checked={a11y.verbose}
                     onChange={(v) => setA11y({ verbose: v })}
@@ -248,7 +285,7 @@ export function TopBar() {
           <div className="grid grid-cols-2 gap-2">
             {NAV.map((n) => (
               <Button key={n.id} size="sm" variant={section === n.id ? 'outline' : 'ghost'} onClick={() => go(n.id)}>
-                {n.label}
+                {t(n.key)}
               </Button>
             ))}
           </div>

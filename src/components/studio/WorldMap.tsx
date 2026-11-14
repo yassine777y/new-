@@ -388,12 +388,12 @@ export function WorldMap({ track, active = true, compact = false }: Props) {
         />
 
         {/* corner readouts */}
-        <div className="pointer-events-none absolute top-2.5 left-3 flex items-center gap-2">
+        <div className="pointer-events-none absolute top-2.5 start-3 flex items-center gap-2">
           <Badge tone="cyan">
             <IconGlobe size={11} /> {compact ? 'MAP' : 'EQUIRECTANGULAR · 1.25° GRID'}
           </Badge>
         </div>
-        <div className="pointer-events-none absolute right-3 bottom-2.5 flex items-center gap-2">
+        <div className="pointer-events-none absolute end-3 bottom-2.5 flex items-center gap-2">
           <span className="data-mono rounded-md border border-white/12 bg-void-950/70 px-2 py-1 text-[10.5px] text-mist-300">
             {Math.floor(year)} · {fmt(value, track.digits)} {track.unit}
           </span>

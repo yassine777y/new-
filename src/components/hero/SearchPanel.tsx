@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TRACKS } from '@/data/tracks'
 import { useStore } from '@/state/store'
+import { useI18n } from '@/i18n/useI18n'
 import { engine } from '@/audio/engine'
 import { emit } from '@/lib/bus'
 import { fmtSigned } from '@/lib/format'
@@ -23,6 +24,7 @@ interface Hit {
 }
 
 export function SearchPanel({ onAskVoice }: { onAskVoice?: () => void }) {
+  const { t } = useI18n()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(0)
@@ -235,8 +237,8 @@ export function SearchPanel({ onAskVoice }: { onAskVoice?: () => void }) {
           aria-expanded={open && hits.length > 0}
           aria-controls="search-results"
           aria-autocomplete="list"
-          aria-label="Search datasets, years, events and views"
-          placeholder="Search a dataset, a year, an event…  e.g. “sea ice”, “1991”, “Pinatubo”, “3d”"
+          aria-label={t('hero.searchLabel')}
+          placeholder={t('hero.searchPlaceholder')}
           className="min-w-0 flex-1 bg-transparent py-1.5 text-[14px] text-mist-50 placeholder:text-mist-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         <IconButton
@@ -256,7 +258,7 @@ export function SearchPanel({ onAskVoice }: { onAskVoice?: () => void }) {
         <ul
           id="search-results"
           role="listbox"
-          aria-label="Search results"
+          aria-label={t('hero.hits')}
           className="glass absolute z-40 mt-2 max-h-[60vh] w-full overflow-auto rounded-2xl p-1.5"
         >
           {hits.map((h, i) => (
@@ -264,7 +266,7 @@ export function SearchPanel({ onAskVoice }: { onAskVoice?: () => void }) {
               <button
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => commit(h)}
-                className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition ${
                   i === cursor ? 'bg-sonic-300/14' : 'hover:bg-white/6'
                 }`}
               >

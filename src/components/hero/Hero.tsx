@@ -13,10 +13,12 @@ import { engine } from '@/audio/engine'
 import { useInView } from '@/lib/hooks'
 import { emit } from '@/lib/bus'
 import { Badge, Button } from '@/components/ui/Primitives'
+import { useI18n } from '@/i18n/useI18n'
 import { IconAccess, IconArrow, IconMic, IconSpark, IconWave } from '@/components/ui/Icon'
 
 export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
   const { ref, inView } = useInView<HTMLDivElement>({ rootMargin: '300px' })
+  const { t } = useI18n()
   const audioUnlocked = useStore((s) => s.audioUnlocked)
   const setActiveTrack = useStore((s) => s.setActiveTrack)
   const setIsPlaying = useStore((s) => s.setIsPlaying)
@@ -59,25 +61,20 @@ export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
         <div className="max-w-3xl">
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <Badge tone="cyan">
-              <IconSpark size={11} /> NASA Space Apps Challenge 2026
+              <IconSpark size={11} /> {t('hero.badge1')}
             </Badge>
-            <Badge tone="warm">Earth Jukebox · sonification of EIC frames</Badge>
+            <Badge tone="warm">{t('hero.badge2')}</Badge>
             <Badge tone="neutral">
-              <IconAccess size={11} /> built for blind &amp; low-vision listeners
+              <IconAccess size={11} /> {t('hero.badge3')}
             </Badge>
           </div>
 
           <h1 className="text-[clamp(2.6rem,7.2vw,5.4rem)] leading-[0.94] font-semibold tracking-tight">
-            <span className="block text-mist-50">Hear the Earth</span>
-            <span className="text-gradient block">change.</span>
+            <span className="block text-mist-50">{t('hero.title1')}</span>
+            <span className="text-gradient block">{t('hero.title2')}</span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-[15.5px] leading-relaxed text-mist-200 sm:text-[17px]">
-            NASA&apos;s Earth Information Center shows us a changing planet. We turned those frames into sound.
-            Six vital signs — temperature, carbon dioxide, emissions, sea ice, sea level and ocean heat — are
-            synthesised live in your browser: the value becomes pitch, the rate of change becomes tempo, and the
-            geography becomes the stereo field.
-          </p>
+          <p className="mt-6 max-w-2xl text-[15.5px] leading-relaxed text-mist-200 sm:text-[17px]">{t('hero.lede')}</p>
 
           <div className="mt-8 max-w-2xl">
             <SearchPanel onAskVoice={onAskVoice} />
@@ -85,10 +82,10 @@ export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
 
           <div className="mt-6 flex flex-wrap items-center gap-2.5">
             <Button variant="primary" size="md" onClick={startListening}>
-              <IconWave size={16} /> {audioUnlocked ? 'Start the jukebox' : 'Enable sound & start'}
+              <IconWave size={16} /> {audioUnlocked ? t('hero.ctaListen') : t('hero.ctaEnable')}
             </Button>
             <Button variant="ghost" size="md" onClick={onAskVoice}>
-              <IconMic size={16} className={level > 0.02 ? 'text-sonic-300' : ''} /> Ask by voice
+              <IconMic size={16} className={level > 0.02 ? 'text-sonic-300' : ''} /> {t('hero.askVoice')}
             </Button>
             <Button
               variant="ghost"
@@ -98,16 +95,16 @@ export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
                 emit({ type: 'scroll-to', section: 'listen' })
               }}
             >
-              What can I hear? <IconArrow size={15} />
+              {t('hero.ctaBrowse')} <IconArrow size={15} />
             </Button>
           </div>
 
           <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             {[
-              ['6', 'Earth vital signs'],
-              ['1880→2024', 'years of record'],
-              ['0 ms', 'pre-recorded audio'],
-              ['100%', 'synthesised live'],
+              ['6', t('hero.stat1')],
+              ['1880→2024', t('hero.stat2')],
+              ['0 ms', t('hero.stat3')],
+              ['100%', t('hero.stat4')],
             ].map(([v, l]) => (
               <div key={l}>
                 <dt className="label-mono">{l}</dt>
@@ -121,7 +118,7 @@ export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
       {/* scroll cue */}
       <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
         <div className="flex flex-col items-center gap-2 opacity-70">
-          <span className="label-mono">scroll — choose what to hear</span>
+          <span className="label-mono">{t('hero.scrollCue')}</span>
           <span className="relative flex h-8 w-5 items-start justify-center rounded-full border border-white/25 p-1">
             <span className="h-1.5 w-1 rounded-full bg-sonic-300 animate-drift" />
           </span>
@@ -129,9 +126,9 @@ export function Hero({ onAskVoice }: { onAskVoice: () => void }) {
       </div>
 
       {!audioUnlocked && (
-        <div className="pointer-events-none absolute right-4 bottom-24 sm:right-8">
+        <div className="pointer-events-none absolute end-4 bottom-24 sm:end-8">
           <div className="glass-soft animate-pulse-ring rounded-full" aria-hidden />
-          <div className="glass absolute right-0 bottom-0 rounded-xl px-3 py-2 text-[11.5px] text-mist-200">
+          <div className="glass absolute end-0 bottom-0 rounded-xl px-3 py-2 text-[11.5px] text-mist-200">
             Click anywhere to unlock audio
           </div>
         </div>
