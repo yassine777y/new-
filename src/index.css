@@ -1,0 +1,356 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Earth Jukebox — design tokens
+ * Space-observatory aesthetic: deep void, instrument cyan, data amber.
+ * ------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('./fonts/SpaceGrotesk.ttf') format('truetype');
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('./fonts/IBMPlexMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('./fonts/IBMPlexMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('./fonts/IBMPlexMono-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('./fonts/IBMPlexMono-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@theme {
+  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+
+  /* void / surfaces */
+  --color-void-950: #03050b;
+  --color-void-900: #060a14;
+  --color-void-850: #090e1c;
+  --color-void-800: #0d1426;
+  --color-void-700: #141d33;
+  --color-void-600: #1d2942;
+  --color-void-500: #2b3a58;
+
+  /* instrument cyan */
+  --color-sonic-50: #ecfdff;
+  --color-sonic-100: #cff9fe;
+  --color-sonic-200: #a5f0fc;
+  --color-sonic-300: #6ee7ff;
+  --color-sonic-400: #22d3ee;
+  --color-sonic-500: #06b6d4;
+  --color-sonic-600: #0891b2;
+  --color-sonic-700: #0e7490;
+
+  /* carbon amber */
+  --color-carbon-200: #ffe6b3;
+  --color-carbon-300: #ffd166;
+  --color-carbon-400: #ffb347;
+  --color-carbon-500: #f59e0b;
+  --color-carbon-600: #d97706;
+
+  /* heat */
+  --color-heat-300: #ffb3a7;
+  --color-heat-400: #ff8a72;
+  --color-heat-500: #ff6b57;
+  --color-heat-600: #e8442c;
+
+  /* ice */
+  --color-ice-200: #e0f5ff;
+  --color-ice-300: #b6e8ff;
+  --color-ice-400: #7dd3fc;
+  --color-ice-500: #38bdf8;
+
+  /* text */
+  --color-mist-50: #f6f9ff;
+  --color-mist-100: #e6edf9;
+  --color-mist-200: #c7d3e8;
+  --color-mist-300: #9fb0cc;
+  --color-mist-400: #7587a6;
+  --color-mist-500: #566a8c;
+
+  --animate-drift: drift 18s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-scan: scan 6s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.85;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes eqbar {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-void-950);
+    color: var(--color-mist-100);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* deep-space backdrop behind everything */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(34, 211, 238, 0.13), transparent 62%),
+      radial-gradient(900px 600px at 8% 12%, rgba(124, 156, 255, 0.12), transparent 60%),
+      radial-gradient(1000px 800px at 50% 108%, rgba(255, 138, 92, 0.09), transparent 65%),
+      linear-gradient(180deg, #03050b 0%, #05080f 40%, #03050b 100%);
+    pointer-events: none;
+  }
+
+  /* faint sensor-grain */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: rgba(110, 231, 255, 0.28);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-sonic-300);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #060a14;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #1d2942, #14202f);
+    border-radius: 99px;
+    border: 2px solid #060a14;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2b3a58, #1d2942);
+  }
+
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    margin-top: -6px;
+    border-radius: 99px;
+    background: var(--color-sonic-300);
+    box-shadow: 0 0 0 4px rgba(110, 231, 255, 0.18), 0 0 18px rgba(110, 231, 255, 0.6);
+    border: none;
+  }
+  input[type='range']::-moz-range-track {
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  input[type='range']::-moz-range-thumb {
+    height: 16px;
+    width: 16px;
+    border: none;
+    border-radius: 99px;
+    background: var(--color-sonic-300);
+    box-shadow: 0 0 0 4px rgba(110, 231, 255, 0.18);
+  }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(160deg, rgba(19, 28, 48, 0.78), rgba(6, 10, 20, 0.72));
+    border: 1px solid rgba(140, 175, 220, 0.14);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 24px 60px -28px rgba(0, 0, 0, 0.9);
+  }
+
+  .glass-soft {
+    background: rgba(10, 16, 29, 0.55);
+    border: 1px solid rgba(140, 175, 220, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .hairline {
+    border-color: rgba(140, 175, 220, 0.12);
+  }
+
+  .label-mono {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-mist-400);
+  }
+
+  .data-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 0 1px rgba(110, 231, 255, 0.25), 0 0 40px -8px rgba(34, 211, 238, 0.55);
+  }
+
+  .text-gradient {
+    background: linear-gradient(100deg, #ecfdff 8%, #6ee7ff 42%, #a5b4fc 72%, #ffd166 108%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .grid-lines {
+    background-image:
+      linear-gradient(rgba(120, 170, 220, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 170, 220, 0.055) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .eq-bar {
+    transform-origin: bottom;
+    animation: eqbar 1s ease-in-out infinite;
+  }
+}
+
+/* High-contrast accessibility mode */
+html[data-contrast='high'] {
+  --color-mist-100: #ffffff;
+  --color-mist-200: #ffffff;
+  --color-mist-300: #eaf3ff;
+  --color-mist-400: #d3e2f5;
+}
+html[data-contrast='high'] .glass,
+html[data-contrast='high'] .glass-soft {
+  background: #000308;
+  border-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
