@@ -1,11 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useStore } from '@/state/store'
 import { answerAgent, type AgentAction, type AgentContext } from './knowledge'
+import { speechLangFor } from '@/i18n'
 import { cancelSpeech, createRecognition, recognitionSupported, speak, synthesisSupported, type SpeechRecognitionLike } from './speech'
 import { toSpoken } from '@/lib/format'
 import { emit } from '@/lib/bus'
 import { clamp } from '@/lib/math'
 import type { ChatMessage } from '@/data/types'
+
+/**
+ * Which voice should read this reply? The language follows the *text*, not the interface:
+ * the local knowledge base answers in English, in Darija when you ask in Darija, and a
+ * configured remote model may answer in the interface language. Reading English through a
+ * French or Arabic voice would mangle every word, so we only switch when the text really is
+ * in that language.
+ */
+function langForSpeech(text: string, uiLang: string): string {
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar-MA'
+  if (uiLang === 'fr') {
+    const sample = text.slice(0, 200).toLowerCase()
+    if (/[\u00e0\u00e2\u00e7\u00e9\u00e8\u00ea\u00eb\u00ee\u00ef\u00f4\u0153]/.test(sample) || /\b(le|la|les|des|est|vous|une|dans|pour|que|qui|cette)\b/.test(sample)) {
+      return speechLangFor('fr')
+    }
+  }
+  return 'en-US'
+}
 
 const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 
@@ -122,6 +141,10 @@ export function useVoiceAgent() {
       if (!agent.speakAnswers || !ttsSupported) return
       cancelSpeech()
       speak(toSpoken(text), {
+        // The spoken language follows the text, not the interface: the local knowledge base
+        // answers in English, in Darija when you ask in Darija, and in whatever language a
+        // configured remote model replies with.
+        lang: langForSpeech(text, store.getState().lang),
         voiceName: agent.voiceName,
         rate: agent.rate,
         pitch: agent.pitch,
@@ -244,7 +267,8 @@ export function useVoiceAgent() {
 
       // 1) transcription (optional)
       if (micSupported) {
-        const rec = createRecognition('en-US')
+        // Dictation follows the interface language, so a French or Arabic speaker can just talk.
+        const rec = createRecognition(speechLangFor(store.getState().lang))
         if (rec) {
           recRef.current = rec
           rec.continuous = mode === 'record'

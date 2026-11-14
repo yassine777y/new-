@@ -11,6 +11,8 @@ import { fmt, fmtSigned } from '@/lib/format'
 import { clamp, invLerp, sampleSeries } from '@/lib/math'
 import { Badge, Button, IconButton } from '@/components/ui/Primitives'
 import { IconLoop, IconPause, IconPlay, IconRewind, IconStop } from '@/components/ui/Icon'
+import { useI18n } from '@/i18n/useI18n'
+import type { I18nKey } from '@/i18n'
 
 const SPEEDS = [
   { label: '8 s', value: 8 },
@@ -19,21 +21,22 @@ const SPEEDS = [
   { label: '60 s', value: 60 },
 ]
 
-function presetsFor(track: Track): Array<{ label: string; range: [number, number] }> {
+function presetsFor(track: Track): Array<{ key: I18nKey; range: [number, number] }> {
   const [lo, hi] = track.yearSpan
-  const list: Array<{ label: string; range: [number, number] }> = [
-    { label: 'Full record', range: [lo, hi] },
-    { label: '1900 → 2000', range: [Math.max(lo, 1900), Math.min(hi, 2000)] },
-    { label: '1950 → 2000', range: [Math.max(lo, 1950), Math.min(hi, 2000)] },
-    { label: '20th century', range: [Math.max(lo, 1901), Math.min(hi, 2000)] },
-    { label: 'Last 30 years', range: [Math.max(lo, hi - 30), hi] },
+  const list: Array<{ key: I18nKey; range: [number, number] }> = [
+    { key: 'time.fullRecord', range: [lo, hi] },
+    { key: 'time.century', range: [Math.max(lo, 1900), Math.min(hi, 2000)] },
+    { key: 'time.half', range: [Math.max(lo, 1950), Math.min(hi, 2000)] },
+    { key: 'time.twentieth', range: [Math.max(lo, 1901), Math.min(hi, 2000)] },
+    { key: 'time.last30', range: [Math.max(lo, hi - 30), hi] },
   ]
-  if (track.id === 'seaice') list.splice(3, 1, { label: 'Satellite era', range: [1979, hi] })
-  if (track.id === 'sealevel') list.splice(3, 1, { label: 'Altimetry era', range: [1993, hi] })
+  if (track.id === 'seaice') list.splice(3, 1, { key: 'time.satellite', range: [1979, hi] })
+  if (track.id === 'sealevel') list.splice(3, 1, { key: 'time.altimetry', range: [1993, hi] })
   return list.filter((p) => p.range[1] > p.range[0])
 }
 
 export function Timeline({ track }: { track: Track }) {
+  const { t } = useI18n()
   const year = useStore((s) => s.year)
   const range = useStore((s) => s.range)
   const setRange = useStore((s) => s.setRange)
@@ -76,7 +79,7 @@ export function Timeline({ track }: { track: Track }) {
       {/* transport row */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="primary" size="md" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Play sonification'}>
+          <Button variant="primary" size="md" onClick={togglePlay} aria-label={isPlaying ? t('top.pause') : t('top.play')}>
             {isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
             {isPlaying ? 'Pause' : 'Play'}
           </Button>
@@ -101,13 +104,13 @@ export function Timeline({ track }: { track: Track }) {
           >
             <IconStop size={15} />
           </IconButton>
-          <IconButton label={loop ? 'Looping is on' : 'Looping is off'} active={loop} onClick={toggleLoop}>
+          <IconButton label={`${t('time.loop')}: ${loop ? 'on' : 'off'}`} active={loop} onClick={toggleLoop}>
             <IconLoop size={16} />
           </IconButton>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="label-mono mr-1">Window plays in</span>
+          <span className="label-mono me-1">{t('time.speed')}</span>
           {SPEEDS.map((s) => (
             <Button key={s.value} size="xs" variant={duration === s.value ? 'outline' : 'ghost'} onClick={() => setDuration(s.value)}>
               {s.label}
@@ -121,7 +124,7 @@ export function Timeline({ track }: { track: Track }) {
         <div className="relative">
           <div className="relative h-9">
             {/* window bar */}
-            <div className="absolute top-4 right-0 left-0 h-1.5 rounded-full bg-white/8" />
+            <div className="absolute top-4 inset-x-0 h-1.5 rounded-full bg-white/8" />
             <div
               className="absolute top-4 h-1.5 rounded-full"
               style={{
@@ -146,14 +149,14 @@ export function Timeline({ track }: { track: Track }) {
                     style={{ left: `${p * 100}%` }}
                   >
                     <div className="h-2.5 w-px bg-white/35" />
-                    <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden w-max max-w-56 -translate-x-1/2 rounded-lg border border-white/15 bg-void-950/95 px-2.5 py-1.5 text-left group-hover:block">
+                    <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden w-max max-w-56 -translate-x-1/2 rounded-lg border border-white/15 bg-void-950/95 px-2.5 py-1.5 text-start group-hover:block">
                       <div className="data-mono text-[10.5px] text-sonic-200">
                         {Math.floor(e.year)} · {e.title}
                       </div>
                       <div className="mt-0.5 text-[11px] leading-snug text-mist-300">{e.detail}</div>
                     </div>
                     <button
-                      className="absolute -top-1 -left-3 h-6 w-6 cursor-pointer rounded-full opacity-0"
+                      className="absolute -top-1 -start-3 h-6 w-6 cursor-pointer rounded-full opacity-0"
                       aria-label={`Jump to ${Math.floor(e.year)}: ${e.title}`}
                       onClick={() => seekTo(e.year, true)}
                     />
@@ -168,7 +171,7 @@ export function Timeline({ track }: { track: Track }) {
             max={range[1]}
             step={0.25}
             value={clamp(year, range[0], range[1])}
-            aria-label="Playhead year"
+            aria-label={t('time.year')}
             aria-valuetext={`${Math.floor(year)}, ${fmtSigned(value, track.digits)} ${track.unitSpoken}`}
             onChange={(e) => seekTo(Number(e.target.value))}
             onKeyUp={(e) => {
@@ -181,7 +184,7 @@ export function Timeline({ track }: { track: Track }) {
           <div>
             <div className="data-mono text-[30px] leading-none font-semibold text-mist-50 sm:text-[34px]">
               {Math.floor(year)}
-              <span className="ml-2 text-[15px] font-normal" style={{ color: track.color }}>
+              <span className="ms-2 text-[15px] font-normal" style={{ color: track.color }}>
                 {fmtSigned(value, track.digits)} {track.unit}
               </span>
             </div>
@@ -201,22 +204,22 @@ export function Timeline({ track }: { track: Track }) {
       {/* range window */}
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <span className="label-mono">Time window</span>
+          <span className="label-mono">{t('time.presets')}</span>
           <div className="flex flex-wrap gap-1.5">
             {presets.map((p) => {
               const on = p.range[0] === range[0] && p.range[1] === range[1]
               return (
                 <Button
-                  key={p.label}
+                  key={t(p.key)}
                   size="xs"
                   variant={on ? 'outline' : 'ghost'}
                   onClick={() => {
                     setRange(p.range)
                     seekTo(p.range[0])
-                    announce(`Window set to ${p.label}: ${p.range[0]} to ${p.range[1]}`)
+                    announce(`Window set to ${t(p.key)}: ${p.range[0]} to ${p.range[1]}`)
                   }}
                 >
-                  {p.label}
+                  {t(p.key)}
                 </Button>
               )
             })}

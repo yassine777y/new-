@@ -7,6 +7,7 @@ import { useStore } from '@/state/store'
 import { Badge, Button, Kbd, Panel, Reveal, SectionHeading, SourceBadge, Toggle } from '@/components/ui/Primitives'
 import { IconAccess, IconKeyboard, IconMic, IconPlay, IconWave } from '@/components/ui/Icon'
 import { emit } from '@/lib/bus'
+import { useI18n } from '@/i18n/useI18n'
 
 const FEATURES = [
   {
@@ -65,6 +66,7 @@ const SHORTCUTS: Array<[string, string]> = [
 ]
 
 export function AccessibilitySection() {
+  const { t } = useI18n()
   const a11y = useStore((s) => s.a11y)
   const setA11y = useStore((s) => s.setA11y)
   const announce = useStore((s) => s.announce)
@@ -72,13 +74,13 @@ export function AccessibilitySection() {
   return (
     <section id="access" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <SectionHeading
-        eyebrow="Accessibility · step 4"
+        eyebrow={t('access.eyebrow')}
         title={
           <>
-            Not a feature. <span className="text-gradient">The reason.</span>
+            {t('access.title1')} <span className="text-gradient">{t('access.title2')}</span>
           </>
         }
-        lede="Around 2.2 billion people live with a vision impairment, and NASA's Earth Information Center visualisations reach almost none of them. Turning sight into sound is not a novelty layer on top of this project — it is the project. Everything below is live: switch it on and the whole app changes."
+        lede={t('access.lede')}
       />
 
       <div className="mt-8 flex flex-wrap gap-2">
@@ -106,14 +108,14 @@ export function AccessibilitySection() {
           <Panel className="p-4">
             <div className="mb-3 flex items-center gap-2">
               <IconAccess size={16} className="text-sonic-300" />
-              <span className="label-mono">Try it now — these are live</span>
+              <span className="label-mono">{t('access.try')}</span>
             </div>
             <div className="space-y-3">
-              <Toggle label="High contrast" description="Pure-white text, opaque panels, stronger borders" checked={a11y.highContrast} onChange={(v) => setA11y({ highContrast: v })} />
-              <Toggle label="Reduced motion" description="Freeze the globe and every transition" checked={a11y.reduceMotion} onChange={(v) => setA11y({ reduceMotion: v })} />
-              <Toggle label="Text-only mode" description="Disable WebGL; keep charts, tables and audio" checked={a11y.textOnly} onChange={(v) => setA11y({ textOnly: v })} />
-              <Toggle label="Verbose announcements" description="Read every playhead change to a screen reader" checked={a11y.verbose} onChange={(v) => setA11y({ verbose: v })} />
-              <Toggle label="Haptic blips" description="Vibrate on confirmations where supported" checked={a11y.haptics} onChange={(v) => setA11y({ haptics: v })} />
+              <Toggle label={t('access.highContrast')} description={t('access.highContrastD')} checked={a11y.highContrast} onChange={(v) => setA11y({ highContrast: v })} />
+              <Toggle label={t('access.reduceMotion')} description={t('access.reduceMotionD')} checked={a11y.reduceMotion} onChange={(v) => setA11y({ reduceMotion: v })} />
+              <Toggle label={t('access.textOnly')} description={t('access.textOnlyD')} checked={a11y.textOnly} onChange={(v) => setA11y({ textOnly: v })} />
+              <Toggle label={t('access.verbose')} description={t('access.verboseD')} checked={a11y.verbose} onChange={(v) => setA11y({ verbose: v })} />
+              <Toggle label={t('access.haptics')} description={t('access.hapticsD')} checked={a11y.haptics} onChange={(v) => setA11y({ haptics: v })} />
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button
@@ -124,10 +126,10 @@ export function AccessibilitySection() {
                   announce(a11y.textOnly ? 'WebGL views enabled' : 'Text-only mode on. The maps and globe are hidden; the data table and audio remain.')
                 }}
               >
-                <IconPlay size={12} /> Toggle text-only
+                <IconPlay size={12} /> {t('access.toggleTextOnly')}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => emit({ type: 'start-mic', mode: 'tap' })}>
-                <IconMic size={13} /> Ask by voice
+                <IconMic size={13} /> {t('access.askVoice')}
               </Button>
             </div>
           </Panel>
@@ -135,7 +137,7 @@ export function AccessibilitySection() {
           <Panel className="p-4">
             <div className="mb-3 flex items-center gap-2">
               <IconKeyboard size={16} className="text-sonic-300" />
-              <span className="label-mono">Keyboard map</span>
+              <span className="label-mono">{t('access.keyboard')}</span>
             </div>
             <dl className="space-y-1.5">
               {SHORTCUTS.map(([k, d]) => (
@@ -151,7 +153,7 @@ export function AccessibilitySection() {
                       ),
                     )}
                   </dt>
-                  <dd className="text-right text-[11.5px] leading-snug text-mist-300">{d}</dd>
+                  <dd className="text-end text-[11.5px] leading-snug text-mist-300">{d}</dd>
                 </div>
               ))}
             </dl>
@@ -164,15 +166,15 @@ export function AccessibilitySection() {
             </div>
             <ol className="space-y-2 text-[12.5px] leading-relaxed text-mist-200">
               <li>
-                <span className="data-mono mr-1.5 text-sonic-300">01</span> Close your eyes, tab to the world map, and walk it
+                <span className="data-mono me-1.5 text-sonic-300">01</span> Close your eyes, tab to the world map, and walk it
                 with the arrow keys. Enter rings the point you land on — panned to its longitude.
               </li>
               <li>
-                <span className="data-mono mr-1.5 text-sonic-300">02</span> Switch on text-only mode. The globe disappears and
+                <span className="data-mono me-1.5 text-sonic-300">02</span> Switch on text-only mode. The globe disappears and
                 the same story is available as a chart description plus a table.
               </li>
               <li>
-                <span className="data-mono mr-1.5 text-sonic-300">03</span> Press <Kbd>V</Kbd> and ask, in your own language,
+                <span className="data-mono me-1.5 text-sonic-300">03</span> Press <Kbd>V</Kbd> and ask, in your own language,
                 “what am I hearing right now?”. The answer is spoken and printed.
               </li>
             </ol>

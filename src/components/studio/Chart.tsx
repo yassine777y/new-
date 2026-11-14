@@ -239,7 +239,7 @@ export function Chart({ track, compact = false }: Props) {
       </svg>
 
       {hoverYear != null && (
-        <div className="pointer-events-none absolute right-3 top-2 rounded-lg border border-white/12 bg-void-950/85 px-2.5 py-1.5 text-right">
+        <div className="pointer-events-none absolute end-3 top-2 rounded-lg border border-white/12 bg-void-950/85 px-2.5 py-1.5 text-end">
           <div className="data-mono text-[11px] text-mist-200">
             {Math.floor(hoverYear)} · {fmtSigned(hoverV, track.digits)} {track.unit}
           </div>

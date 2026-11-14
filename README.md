@@ -24,7 +24,28 @@ and the typefaces are all local.
 | 5 | **Accessibility** | Live switches — high contrast, reduced motion, verbose announcements, haptics, and a text-only mode that disables WebGL entirely while leaving charts, tables and audio intact — plus the full keyboard map. |
 | 6 | **Gallery** | Six 45-second pieces, one per dataset, rendered offline through the *same* synthesis code as live playback and downloadable as 16-bit 44.1 kHz stereo WAV. |
 | 7 | **Sources** | All 22 entries: publisher, URL, licence, exactly what was taken, and which tracks use it. Every source badge anywhere in the app scrolls here and flashes its entry. |
-| — | **Voice agent** | A dock, bottom-right, always one keystroke (`V`) away. Ask by microphone, by typed text, or by recording your question as an audio message; answers are spoken aloud and always transcribed. It understands English and Darija, and it can actually drive the app. |
+| — | **Installation mode** | A fullscreen, unattended cycle through all six datasets — 50 seconds each, auto-advancing, cursor hidden, `Esc` to leave. For a kiosk or an exhibition wall. Toggle with `A`, from the top bar or from the Gallery. |
+| — | **Voice agent** | A dock, bottom-right, always one keystroke (`V`) away. Ask by microphone, by typed text, or by recording your question as an audio message; answers are spoken aloud and always transcribed. It understands English, Darija, French and Arabic, and it can actually drive the app. |
+
+### Three languages, two directions
+
+The interface ships in **English, French and Arabic** — switch it from the top bar (`EN / FR / ع`)
+and the choice is remembered. Arabic flips the whole layout to **RTL**: `<html dir="rtl">`, logical
+Tailwind utilities only (`text-start`, `ms-*`, `start-*`), mirrored icons and panels. Speech follows
+suit — dictation listens in the interface language, and answers are spoken in the language of the
+reply, with `ar-MA` for Moroccan Arabic.
+
+Dataset descriptions, source titles and licence notes deliberately stay in their publisher's
+language: a citation you translate is a citation you can no longer verify.
+
+### Take the score into a DAW
+
+Every piece can be exported as **General MIDI** (format 1, 480 PPQ) from the Studio and the Gallery.
+The conductor track carries the title, the ruleset as track text, the key signature and every
+real tempo change from `score.keys[]`; each synthesis voice maps to a GM program on its own channel
+(pads 89, bells 14, glass 99, granular 100, drone 91, sub 38, percussion on channel 10), with pan
+written as CC10 only where it actually moves. Nothing is flattened to a single tempo, so what you
+open in Logic, Reaper or MuseScore is the same music the browser plays.
 
 ---
 
@@ -37,6 +58,17 @@ npm run build      # static bundle in dist/
 npm run preview    # serve the built bundle
 npm run verify     # types + logic checks + headless runtime smoke test
 ```
+
+### Publishing it
+
+`.github/workflows/deploy.yml` runs `npm ci && npm run verify && npm run build` on every push to
+`main` and publishes `dist/` to **GitHub Pages**. One-time setup: *Settings → Pages → Source:
+GitHub Actions*. It can also be triggered by hand from the Actions tab. Because `vite.config.ts`
+uses `base: './'` and every asset is self-hosted, the same `dist/` works unmodified on any static
+host or subpath — Netlify Drop, Vercel, S3, or `npm run preview`.
+
+Note that the microphone and speech synthesis require a secure context: `localhost` and any
+`https://` URL are fine, a raw IP or plain `http://` is not.
 
 `npm run verify` is three gates: `tsc --noEmit`, a pure-function check of the datasets, score
 builder, scales, spatial fields and agent knowledge, and a jsdom run that mounts the real
@@ -127,13 +159,16 @@ the texture cannot be read, an analytic fallback takes over.
 src/
   data/        types · series (1880–2024) · sources (22 cited entries) · tracks (6 rulesets)
   audio/       scales · voices · score (the algorithm) · engine (real-time) · render (offline WAV)
-               · frameAnalysis (image → columns, palette, chord) · useJukebox (the transport hook)
+               · midi (score → General MIDI file) · frameAnalysis (image → columns, palette, chord)
+               · useJukebox (the transport hook)
   lib/         math · colormap · fields · fieldCanvas · landmask · basemap · wav · format · bus · hooks
+  i18n/        three dictionaries (en · fr · ar), direction and speech-tag helpers, useI18n()
   state/       one zustand store — flat enough that the voice agent can drive the whole app
   voice/       knowledge (17-entry offline engine, EN + Darija) · speech · useVoiceAgent
   three/       shaders (hand-written GLSL) · HeroEarth · DataGlobe
-  components/  hero · jukebox · studio · agent · sections · layout · ui
+  components/  hero · jukebox · studio · agent · sections · layout · ui · modes (installation)
 scripts/       verify.mjs + the two check suites
+.github/       workflows/deploy.yml — build, verify and publish to GitHub Pages
 ```
 
 Design notes worth knowing:
@@ -145,6 +180,8 @@ Design notes worth knowing:
   lets the voice agent act on the UI exactly as a click would.
 - **The agent works offline.** `answerAgent()` resolves locally first — intent, dataset, years,
   view, transport — and only optionally calls an OpenAI-compatible endpoint if you configure one.
+- **Logical layout, never physical.** No `text-left`, `ml-*` or `left-*` in the source — the
+  direction comes from the language, so RTL is free rather than a second stylesheet.
 - **Lazy by construction.** `AudioContext` is created on the first gesture, never on load, which
   is why the app never trips an autoplay warning.
 - **StrictMode is off on purpose**: double-invoked effects would open a second AudioContext and a

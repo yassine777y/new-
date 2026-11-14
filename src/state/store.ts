@@ -8,6 +8,7 @@ import { create } from 'zustand'
 import type { ChatMessage, Track } from '@/data/types'
 import { TRACKS, trackById } from '@/data/tracks'
 import { clamp } from '@/lib/math'
+import type { Lang } from '@/i18n'
 
 export type ViewMode = '2d' | '3d' | 'chart' | 'frame'
 
@@ -132,6 +133,14 @@ interface JukeboxState {
   setSearchOpen: (v: boolean) => void
 
   /* misc UI */
+  /** Installation mode: fullscreen, chrome hidden, auto-advancing through every dataset. */
+  ambient: boolean
+  setAmbient: (v: boolean) => void
+
+  /** Interface language; also the language the guide agent speaks. */
+  lang: Lang
+  setLang: (lang: Lang) => void
+
   studioOpen: boolean
   setStudioOpen: (v: boolean) => void
   nowPlayingLabel: string
@@ -140,7 +149,14 @@ interface JukeboxState {
 
 const LS_KEY = 'earth-jukebox-prefs-v1'
 
-function loadPrefs(): { a11y?: Partial<A11ySettings>; agent?: Partial<AgentSettings>; volume?: number } {
+interface Prefs {
+  a11y?: Partial<A11ySettings>
+  agent?: Partial<AgentSettings>
+  volume?: number
+  lang?: Lang
+}
+
+function loadPrefs(): Prefs {
   try {
     const raw = localStorage.getItem(LS_KEY)
     return raw ? JSON.parse(raw) : {}
@@ -292,13 +308,22 @@ export const useStore = create<JukeboxState>((set, get) => ({
   searchOpen: false,
   setSearchOpen: (searchOpen) => set({ searchOpen }),
 
+  ambient: false,
+  setAmbient: (ambient) => set({ ambient }),
+
+  lang: (prefs.lang as Lang) ?? 'en',
+  setLang: (lang) => {
+    set({ lang })
+    persist({ lang })
+  },
+
   studioOpen: false,
   setStudioOpen: (studioOpen) => set({ studioOpen }),
   nowPlayingLabel: '',
   setNowPlayingLabel: (nowPlayingLabel) => set({ nowPlayingLabel }),
 }))
 
-function persist(partial: { a11y?: Partial<A11ySettings>; agent?: Partial<AgentSettings>; volume?: number }) {
+function persist(partial: Prefs) {
   try {
     const current = loadPrefs()
     localStorage.setItem(LS_KEY, JSON.stringify({ ...current, ...partial }))

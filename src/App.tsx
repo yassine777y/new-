@@ -18,6 +18,8 @@ import { Gallery } from '@/components/sections/Gallery'
 import { Sources } from '@/components/sections/Sources'
 import { VoiceAgent } from '@/components/agent/VoiceAgent'
 import { Announcer } from '@/components/Announcer'
+import { dirFor } from '@/i18n'
+import { AmbientMode } from '@/components/modes/AmbientMode'
 
 /** Mirrors the accessibility settings onto <html> so CSS can react. */
 function useA11yAttributes() {
@@ -28,6 +30,16 @@ function useA11yAttributes() {
     el.dataset.contrast = highContrast ? 'high' : 'normal'
     el.dataset.motion = reduceMotion ? 'reduced' : 'full'
   }, [highContrast, reduceMotion])
+}
+
+/** Mirrors the interface language onto <html>, which is what flips the whole layout to RTL. */
+function useDocumentLocale() {
+  const lang = useStore((s) => s.lang)
+  useEffect(() => {
+    const el = document.documentElement
+    el.lang = lang
+    el.dir = dirFor(lang)
+  }, [lang])
 }
 
 /** Handles `scroll-to` bus events, honouring reduced motion. */
@@ -99,6 +111,12 @@ function useShortcuts() {
         st.setAgentOpen(!st.agentOpen)
         return
       }
+      if (k === 'a') {
+        const next = !st.ambient
+        st.setAmbient(next)
+        if (!next) st.announce('Installation mode closed.')
+        return
+      }
       if (k === 'g') {
         st.toggleGrid?.()
         return
@@ -123,6 +141,7 @@ function useShortcuts() {
 export default function App() {
   useJukebox()
   useA11yAttributes()
+  useDocumentLocale()
   useScrollBus()
   useShortcuts()
 
@@ -144,13 +163,13 @@ export default function App() {
     <div className="relative min-h-screen">
       <a
         href="#listen"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-sonic-300 focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-void-950"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-lg focus:bg-sonic-300 focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-void-950"
       >
-        Skip to the jukebox
+        {useStore((s) => s.lang) === 'ar' ? 'انتقل إلى الجوكبوكس' : 'Skip to the jukebox'}
       </a>
       <a
         href="#studio"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-48 focus:z-[100] focus:rounded-lg focus:bg-mist-50 focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-void-950"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-48 focus:z-[100] focus:rounded-lg focus:bg-mist-50 focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-void-950"
       >
         Skip to the studio
       </a>
@@ -169,6 +188,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <AmbientMode />
       <VoiceAgent />
       <Announcer />
     </div>

@@ -4,6 +4,8 @@ import { useStore } from '@/state/store'
 import { Badge, Button, Panel, Reveal, SectionHeading, SourceBadge } from '@/components/ui/Primitives'
 import { IconArrow, IconSpark, IconWave } from '@/components/ui/Icon'
 import { emit } from '@/lib/bus'
+import { useI18n } from '@/i18n/useI18n'
+import type { I18nKey } from '@/i18n'
 import { Logo } from './Logo'
 
 const STACK = [
@@ -24,19 +26,20 @@ const BRIEF = [
 ]
 
 export function About() {
+  const { t } = useI18n()
   const setA11y = useStore((s) => s.setA11y)
   const a11y = useStore((s) => s.a11y)
 
   return (
     <section id="about" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <SectionHeading
-        eyebrow="About the build"
+        eyebrow={t('about.eyebrow')}
         title={
           <>
-            What we made, <span className="text-gradient">and why it is shaped like this</span>
+            {t('about.title1')} <span className="text-gradient">{t('about.title2')}</span>
           </>
         }
-        lede="Earth Jukebox answers the 2026 NASA Space Apps brief with an interactive, voice-driven jukebox and a downloadable playlist from the same synthesis engine. Everything runs in the browser, offline, with no pre-recorded audio."
+        lede={t('about.lede')}
       />
 
       <div className="mt-10 grid gap-5 lg:grid-cols-3">
@@ -80,7 +83,7 @@ export function About() {
 
         <Reveal delay={160}>
           <Panel className="flex h-full flex-col p-5">
-            <span className="label-mono mb-3 block">Run it yourself</span>
+            <span className="label-mono mb-3 block">{t('gallery.reproduce')}</span>
             <pre className="data-mono overflow-auto rounded-xl border border-white/10 bg-void-950 p-3 text-[11.5px] leading-relaxed text-mist-200">
 {`npm install
 npm run dev      # http://localhost:5173
@@ -107,17 +110,18 @@ npm run typecheck`}
   )
 }
 
-const FOOTER_NAV = [
-  { id: 'hero', label: 'Earth' },
-  { id: 'listen', label: 'Listen' },
-  { id: 'studio', label: 'Studio' },
-  { id: 'method', label: 'Method' },
-  { id: 'access', label: 'Access' },
-  { id: 'gallery', label: 'Gallery' },
-  { id: 'sources', label: 'Sources' },
+const FOOTER_NAV: Array<{ id: string; key: I18nKey | null; fallback: string }> = [
+  { id: 'hero', key: null, fallback: 'Earth' },
+  { id: 'listen', key: 'nav.listen', fallback: 'Listen' },
+  { id: 'studio', key: 'nav.studio', fallback: 'Studio' },
+  { id: 'method', key: 'nav.method', fallback: 'Method' },
+  { id: 'access', key: 'nav.access', fallback: 'Access' },
+  { id: 'gallery', key: 'nav.gallery', fallback: 'Gallery' },
+  { id: 'sources', key: 'nav.sources', fallback: 'Sources' },
 ]
 
 export function Footer() {
+  const { t } = useI18n()
   return (
     <footer className="relative border-t border-white/8 bg-void-950/70">
       <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] lg:px-10">
@@ -143,7 +147,7 @@ export function Footer() {
         </div>
 
         <nav aria-label="Footer">
-          <span className="label-mono mb-3 block">Sections</span>
+          <span className="label-mono mb-3 block">{t('footer.sections')}</span>
           <ul className="grid grid-cols-2 gap-1.5">
             {FOOTER_NAV.map((n) => (
               <li key={n.id}>
@@ -151,7 +155,7 @@ export function Footer() {
                   onClick={() => emit({ type: 'scroll-to', section: n.id })}
                   className="text-[12.5px] text-mist-300 transition hover:text-sonic-200"
                 >
-                  {n.label}
+                  {n.key ? t(n.key) : n.fallback}
                 </button>
               </li>
             ))}
@@ -159,7 +163,7 @@ export function Footer() {
         </nav>
 
         <div>
-          <span className="label-mono mb-3 block">Credits</span>
+          <span className="label-mono mb-3 block">{t('footer.credits')}</span>
           <ul className="space-y-1.5 text-[12px] leading-relaxed text-mist-300">
             <li>NASA GISS GISTEMP v4 · NOAA GML · Scripps CO₂</li>
             <li>NSIDC Sea Ice Index v3 · NASA/AVISO+ altimetry</li>
@@ -173,7 +177,7 @@ export function Footer() {
             className="mt-4"
             onClick={() => emit({ type: 'scroll-to', section: 'hero' })}
           >
-            Back to the Earth <IconArrow size={14} />
+            {t('footer.backToEarth')} <IconArrow size={14} />
           </Button>
         </div>
       </div>

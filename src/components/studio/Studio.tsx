@@ -17,6 +17,9 @@ import { engine } from '@/audio/engine'
 import { renderScore } from '@/audio/render'
 import { buildScore } from '@/audio/score'
 import { audioBufferToWav, downloadBlob } from '@/lib/wav'
+import { midiFileName, scoreToMidiBlob } from '@/audio/midi'
+import { useI18n } from '@/i18n/useI18n'
+import type { I18nKey } from '@/i18n'
 import { useInView } from '@/lib/hooks'
 import { WorldMap } from './WorldMap'
 import { DataGlobe } from '@/three/DataGlobe'
@@ -30,16 +33,17 @@ import { Badge, Button, IconButton, Panel, Reveal, SourceBadge, Spinner } from '
 import { IconChart, IconDownload, IconFrame, IconGlobe, IconInfo, IconKeyboard, IconMap, IconPlay, IconSpark, TrackIcon } from '@/components/ui/Icon'
 import { emit } from '@/lib/bus'
 
-const VIEWS: Array<{ id: ViewMode; label: string; icon: typeof IconMap; hint: string }> = [
-  { id: '2d', label: '2D map', icon: IconMap, hint: 'Equirectangular field with hover and keyboard cursor' },
-  { id: '3d', label: '3D globe', icon: IconGlobe, hint: 'Realistic Earth with the data wrapped on the sphere' },
-  { id: 'chart', label: 'Chart', icon: IconChart, hint: 'The time series with playhead and annotated events' },
-  { id: 'frame', label: 'Frame scan', icon: IconFrame, hint: 'Analyse the visual frame itself and sonify the pixels' },
+const VIEWS: Array<{ id: ViewMode; key: I18nKey; icon: typeof IconMap; hint: string }> = [
+  { id: '2d', key: 'studio.view2d', icon: IconMap, hint: 'Equirectangular field with hover and keyboard cursor' },
+  { id: '3d', key: 'studio.view3d', icon: IconGlobe, hint: 'Realistic Earth with the data wrapped on the sphere' },
+  { id: 'chart', key: 'studio.viewChart', icon: IconChart, hint: 'The time series with playhead and annotated events' },
+  { id: 'frame', key: 'studio.viewFrame', icon: IconFrame, hint: 'Analyse the visual frame itself and sonify the pixels' },
 ]
 
 export function Studio() {
   const trackId = useStore((s) => s.activeTrackId)
   const track = useMemo(() => TRACKS.find((t) => t.id === trackId) ?? TRACKS[0], [trackId])
+  const { t } = useI18n()
   const viewMode = useStore((s) => s.viewMode)
   const setViewMode = useStore((s) => s.setViewMode)
   const year = useStore((s) => s.year)
@@ -93,6 +97,23 @@ export function Studio() {
     }
   }
 
+  /** The same score, as a General MIDI file a DAW can open. */
+  const exportMidi = () => {
+    try {
+      const score = buildScore(track, range[0], range[1], duration, {
+        intensity,
+        layers,
+        scaleOverride: (scaleOverride as never) ?? undefined,
+      })
+      const midi = scoreToMidiBlob(score, { title: `${track.title} · ${Math.round(range[0])}\u2013${Math.round(range[1])}` })
+      downloadBlob(midi, midiFileName(track.id, range[0], range[1]))
+      announce(`MIDI exported: ${score.noteCount} notes across the tempo map. Same score, same ruleset.`)
+    } catch (err) {
+      console.error(err)
+      announce('The MIDI export failed.')
+    }
+  }
+
   return (
     <section id="studio" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-16 sm:px-6 lg:px-10">
       <div ref={ref}>
@@ -101,7 +122,7 @@ export function Studio() {
           <div className="min-w-0">
             <div className="label-mono mb-2 flex items-center gap-2.5">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: track.color }} />
-              now in the studio · {track.kicker}
+              {t('studio.eyebrow')} · {track.kicker}
             </div>
             <h2 className="text-3xl leading-tight font-semibold text-mist-50 sm:text-[40px]">{track.title}</h2>
             <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-mist-300">{track.tagline}</p>
@@ -111,13 +132,16 @@ export function Studio() {
               <SourceBadge key={s} id={s} />
             ))}
             <Button size="sm" variant="outline" onClick={() => void exportWindow()} disabled={rendering}>
-              {rendering ? <Spinner size={13} /> : <IconDownload size={14} />} Render this window (WAV)
+              {rendering ? <Spinner size={13} /> : <IconDownload size={14} />} {t('studio.renderWav')}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={exportMidi} title={t('studio.midiHint')}>
+              <IconDownload size={13} /> {t('studio.exportMidi')}
             </Button>
           </div>
         </div>
 
         {/* ---------------- track switcher ---------------- */}
-        <div className="mb-5 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Choose a dataset">
+        <div className="mb-5 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={t('studio.choose')}>
           {TRACKS.map((t) => {
             const on = t.id === track.id
             return (
@@ -130,7 +154,7 @@ export function Studio() {
                   engine.uiBlip('select')
                   announce(`${t.title} loaded. ${t.tagline}.`)
                 }}
-                className={`group inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${
+                className={`group inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-start transition-all ${
                   on
                     ? 'border-white/25 bg-white/10 text-mist-50'
                     : 'border-white/10 bg-white/[0.02] text-mist-300 hover:border-white/20 hover:text-mist-100'
@@ -165,14 +189,14 @@ export function Studio() {
                         onClick={() => {
                           setViewMode(v.id)
                           engine.uiBlip('select')
-                          announce(`${v.label} view`)
+                          announce(`${t(v.key)} view`)
                         }}
                         className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition ${
                           on ? 'bg-sonic-300/15 text-sonic-200 ring-1 ring-sonic-300/40' : 'text-mist-300 hover:bg-white/6 hover:text-mist-100'
                         }`}
                       >
                         <Icon size={14} />
-                        {v.label}
+                        {t(v.key)}
                       </button>
                     )
                   })}
@@ -192,7 +216,7 @@ export function Studio() {
                 {viewMode === '3d' && (
                   <div className="relative aspect-2/1 w-full overflow-hidden rounded-xl border border-white/10 bg-void-950">
                     <DataGlobe track={track} active={inView} />
-                    <div className="pointer-events-none absolute bottom-2.5 left-3">
+                    <div className="pointer-events-none absolute bottom-2.5 start-3">
                       <Badge tone="cyan">
                         <IconGlobe size={11} /> drag to rotate · click to sonify a point
                       </Badge>
@@ -293,7 +317,7 @@ export function Studio() {
             <Panel className="p-4">
               <div className="mb-2 flex items-center gap-2">
                 <IconKeyboard size={14} className="text-mist-400" />
-                <span className="label-mono">Keyboard</span>
+                <span className="label-mono">{t('studio.keys')}</span>
               </div>
               <ul className="data-mono space-y-1 text-[11.5px] text-mist-300">
                 <li>

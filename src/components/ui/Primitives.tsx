@@ -182,7 +182,7 @@ export function Toggle({
       >
         <span
           className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition-all duration-200 ${
-            checked ? 'left-5.5 bg-sonic-200 shadow-[0_0_12px_rgba(110,231,255,0.8)]' : 'left-0.5 bg-mist-400'
+            checked ? 'start-5.5 bg-sonic-200 shadow-[0_0_12px_rgba(110,231,255,0.8)]' : 'start-0.5 bg-mist-400'
           }`}
           style={{ height: 18, width: 18, left: checked ? 22 : 2 }}
         />

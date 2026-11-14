@@ -9,11 +9,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/state/store'
 import { useVoiceAgent } from '@/voice/useVoiceAgent'
-import { SUGGESTIONS } from '@/voice/knowledge'
+import { useI18n } from '@/i18n/useI18n'
+import type { I18nKey } from '@/i18n'
 import { onBus } from '@/lib/bus'
 import { fmtClock } from '@/lib/format'
 import { Badge, Button, IconButton, Slider, Toggle } from '@/components/ui/Primitives'
 import { IconAccess, IconClose, IconMic, IconPause, IconPlay, IconRecord, IconSpark, IconVolume } from '@/components/ui/Icon'
+
+/** The four starter questions, in the interface language. */
+const SUGGESTION_KEYS = ['agent.sug1', 'agent.sug2', 'agent.sug3', 'agent.sug7'] as const satisfies readonly I18nKey[]
 
 export function VoiceAgent() {
   const open = useStore((s) => s.agentOpen)
@@ -26,6 +30,7 @@ export function VoiceAgent() {
   const agent = useStore((s) => s.agent)
   const setAgent = useStore((s) => s.setAgentSettings)
 
+  const { t } = useI18n()
   const { ask, toggleMic, stopMic, stopSpeaking, micSupported, ttsSupported, voices } = useVoiceAgent()
   const [draft, setDraft] = useState('')
   const [showSettings, setShowSettings] = useState(false)
@@ -70,11 +75,11 @@ export function VoiceAgent() {
   return (
     <>
       {/* ---------------- dock ---------------- */}
-      <div className="pointer-events-none fixed right-3 bottom-3 z-50 flex flex-col items-end gap-2 sm:right-5 sm:bottom-5">
+      <div className="pointer-events-none fixed end-3 bottom-3 z-50 flex flex-col items-end gap-2 sm:end-5 sm:bottom-5">
         {open && (
           <div
             role="dialog"
-            aria-label="Earth guide agent"
+            aria-label={t('agent.title')}
             className="glass pointer-events-auto flex w-[min(94vw,400px)] flex-col overflow-hidden rounded-2xl"
             style={{ maxHeight: 'min(76vh, 660px)' }}
           >
@@ -94,14 +99,14 @@ export function VoiceAgent() {
               </div>
               <div className="flex items-center gap-1">
                 {speaking && (
-                  <IconButton label="Stop speaking" onClick={stopSpeaking}>
+                  <IconButton label={t('agent.stopSpeaking')} onClick={stopSpeaking}>
                     <IconPause size={15} />
                   </IconButton>
                 )}
-                <IconButton label="Agent settings" active={showSettings} onClick={() => setShowSettings((v) => !v)}>
+                <IconButton label={t('agent.settings')} active={showSettings} onClick={() => setShowSettings((v) => !v)}>
                   <IconAccess size={15} />
                 </IconButton>
-                <IconButton label="Close the agent" onClick={() => setOpen(false)}>
+                <IconButton label={t('agent.close')} onClick={() => setOpen(false)}>
                   <IconClose size={15} />
                 </IconButton>
               </div>
@@ -127,10 +132,10 @@ export function VoiceAgent() {
                   </select>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <Slider label="Rate" value={agent.rate} min={0.6} max={1.6} step={0.05} onChange={(v) => setAgent({ rate: v })} format={(v) => `${v.toFixed(2)}×`} />
-                  <Slider label="Pitch" value={agent.pitch} min={0.5} max={1.6} step={0.05} onChange={(v) => setAgent({ pitch: v })} format={(v) => v.toFixed(2)} />
+                  <Slider label={t('agent.rate')} value={agent.rate} min={0.6} max={1.6} step={0.05} onChange={(v) => setAgent({ rate: v })} format={(v) => `${v.toFixed(2)}×`} />
+                  <Slider label={t('agent.pitch')} value={agent.pitch} min={0.5} max={1.6} step={0.05} onChange={(v) => setAgent({ pitch: v })} format={(v) => v.toFixed(2)} />
                 </div>
-                <Toggle label="Speak answers aloud" checked={agent.speakAnswers} onChange={(v) => setAgent({ speakAnswers: v })} />
+                <Toggle label={t('agent.speakAnswers')} checked={agent.speakAnswers} onChange={(v) => setAgent({ speakAnswers: v })} />
                 <label className="block">
                   <span className="label-mono mb-1 block">Model endpoint (optional)</span>
                   <input
@@ -168,12 +173,12 @@ export function VoiceAgent() {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-heat-500/25 text-heat-300">
                           <IconRecord size={11} />
                         </span>
-                        <audio controls src={m.audioUrl} className="h-8 max-w-[210px]" aria-label="Recorded question" />
+                        <audio controls src={m.audioUrl} className="h-8 max-w-[210px]" aria-label={t('agent.record')} />
                         {m.audioSeconds != null && <span className="data-mono text-[10px] text-mist-400">{fmtClock(m.audioSeconds)}</span>}
                       </div>
                     )}
                     {m.text}
-                    {m.pending && <span className="ml-1 inline-block animate-pulse">▍</span>}
+                    {m.pending && <span className="ms-1 inline-block animate-pulse">▍</span>}
                     {m.role === 'agent' && !m.pending && (
                       <div className="mt-1.5 flex items-center gap-1.5">
                         <button
@@ -201,13 +206,13 @@ export function VoiceAgent() {
             {/* suggestions */}
             {messages.length <= 2 && (
               <div className="flex flex-wrap gap-1.5 border-t border-white/8 px-3.5 py-2.5">
-                {SUGGESTIONS.slice(0, 4).map((s) => (
+                {SUGGESTION_KEYS.map((k) => (
                   <button
-                    key={s}
-                    onClick={() => void ask(s)}
+                    key={k}
+                    onClick={() => void ask(t(k))}
                     className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-[11px] text-mist-300 transition hover:border-sonic-300/40 hover:text-sonic-200"
                   >
-                    {s}
+                    {t(k)}
                   </button>
                 ))}
               </div>
@@ -228,14 +233,14 @@ export function VoiceAgent() {
                 ref={inputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={busy ? 'Listening…' : 'Ask anything, or tap the mic'}
-                aria-label="Type a question for the guide agent"
+                placeholder={busy ? t('agent.listening') : t('agent.placeholder')}
+                aria-label={t('agent.placeholder')}
                 className="min-w-0 flex-1 rounded-xl border border-white/12 bg-void-900 px-3 py-2 text-[13px] text-mist-50 placeholder:text-mist-400 focus:border-sonic-300/50 focus:outline-none"
               />
-              <IconButton label="Record your question as an audio message" variant={recording ? 'danger' : 'ghost'} onClick={() => toggleMic('record')}>
+              <IconButton label={t('agent.record')} variant={recording ? 'danger' : 'ghost'} onClick={() => toggleMic('record')}>
                 <IconRecord size={15} className={recording ? 'animate-pulse' : ''} />
               </IconButton>
-              <IconButton label={busy ? 'Stop listening' : 'Tap to talk'} variant={listening ? 'primary' : 'ghost'} onClick={() => toggleMic('tap')}>
+              <IconButton label={busy ? t('agent.stopRec') : t('agent.tap')} variant={listening ? 'primary' : 'ghost'} onClick={() => toggleMic('tap')}>
                 <IconMic size={16} />
               </IconButton>
               <Button type="submit" variant="primary" size="sm" disabled={!draft.trim()}>
@@ -266,7 +271,7 @@ export function VoiceAgent() {
         {/* collapsed launcher */}
         <button
           onClick={() => (open ? setOpen(false) : setOpen(true))}
-          aria-label={open ? 'Close the Earth guide agent' : 'Open the Earth guide agent and ask by voice'}
+          aria-label={open ? t('agent.close') : t('agent.open')}
           aria-expanded={open}
           className={`pointer-events-auto group relative flex items-center gap-2.5 rounded-full border px-3.5 py-3 transition-all sm:px-4 ${
             open

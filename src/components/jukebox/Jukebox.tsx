@@ -14,6 +14,7 @@ import { emit } from '@/lib/bus'
 import { invLerp, minMax } from '@/lib/math'
 import { Badge, Button, Panel, Reveal, SectionHeading, SourceBadge } from '@/components/ui/Primitives'
 import { IconArrow, IconPlay, IconWave, TrackIcon } from '@/components/ui/Icon'
+import { useI18n } from '@/i18n/useI18n'
 
 function Sparkline({ track, width = 320, height = 64 }: { track: Track; width?: number; height?: number }) {
   const year = useStore((s) => s.year)
@@ -57,6 +58,7 @@ function Sparkline({ track, width = 320, height = 64 }: { track: Track; width?: 
 }
 
 function TrackCard({ track, index }: { track: Track; index: number }) {
+  const { t } = useI18n()
   const activeTrackId = useStore((s) => s.activeTrackId)
   const setActiveTrack = useStore((s) => s.setActiveTrack)
   const isPlaying = useStore((s) => s.isPlaying)
@@ -173,13 +175,13 @@ function TrackCard({ track, index }: { track: Track; index: number }) {
 
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="primary" size="sm" onClick={() => open(true)}>
-              <IconPlay size={13} /> Listen
+              <IconPlay size={13} /> {t('listen.play')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => void preview()} title="A three-second excerpt, synthesised now">
-              <IconWave size={14} /> Preview
+              <IconWave size={14} /> {t('listen.preview')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => open(false)}>
-              Open studio <IconArrow size={14} />
+              {t('listen.open')} <IconArrow size={14} />
             </Button>
           </div>
 
@@ -200,21 +202,22 @@ function TrackCard({ track, index }: { track: Track; index: number }) {
 }
 
 export function Jukebox() {
+  const { t } = useI18n()
   return (
     <section id="listen" className="relative mx-auto w-full max-w-[1440px] scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
       <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
         <SectionHeading
-          eyebrow="The rack · step 2"
+          eyebrow={t('listen.eyebrow')}
           title={
             <>
-              What do you want <span className="text-gradient">to hear?</span>
+              {t('listen.title1')} <span className="text-gradient">{t('listen.title2')}</span>
             </>
           }
-          lede="Six Earth vital signs, each with its own dataset, its own colour ramp and its own musical ruleset. Pick one and the studio below loads it: a 2D map, a 3D globe, a time window you can set to 1900→2000, and the chart with the playhead."
+          lede={t('listen.lede')}
         />
-        <div className="flex flex-col gap-2 text-right">
-          <span className="label-mono">all sound is generated live</span>
-          <span className="data-mono text-[12px] text-mist-400">no pre-recorded audio · Web Audio API synthesis</span>
+        <div className="flex flex-col gap-2 text-end">
+          <span className="label-mono">{t('listen.generated')}</span>
+          <span className="data-mono text-[12px] text-mist-400">{t('listen.noPrerecorded')}</span>
         </div>
       </div>
 
